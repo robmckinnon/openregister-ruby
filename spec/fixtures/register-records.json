@@ -1,0 +1,60 @@
+[{
+  "serial-number": 10,
+  "hash": "572bef0ffc666e39421fda821e2f899bb4061dd7",
+  "entry":
+  {
+    "fields": ["field", "datatype", "phase", "register", "cardinality", "text"],
+    "phase": "alpha",
+    "register": "field",
+    "registry": "cabinet-office",
+    "text": "Field names which may appear in a register"
+  }
+},
+{
+  "serial-number": 9,
+  "hash": "247cf017d1b91ca8e0cd3abb60712224c6fa2b03",
+  "entry":
+  {
+    "fields": ["country", "name", "official-name", "citizen-names", "start-date", "end-date"],
+    "phase": "alpha",
+    "register": "country",
+    "registry": "foreign-commonwealth-office",
+    "text": "British English-language names and descriptive terms for countries"
+  }
+},
+{
+  "serial-number": 8,
+  "hash": "701b682581fd06b346fb8d2126c378ee2cf369fc",
+  "entry":
+  {
+    "fields": ["public-body", "name", "website", "public-body-type", "parent-bodies", "text", "crest", "official-colour"],
+    "phase": "alpha",
+    "register": "public-body",
+    "registry": "cabinet-office",
+    "text": "Ministerial Departments and agencies sponsored by HM Government"
+  }
+},
+{
+  "serial-number": 7,
+  "hash": "b51e90b4e68186503c8cb1b25ba672ef5c170bb0",
+  "entry":
+  {
+    "fields": ["register", "text", "registry", "phase", "copyright", "fields"],
+    "phase": "alpha",
+    "register": "register",
+    "registry": "cabinet-office",
+    "text": "Registers maintained by HM Government"
+  }
+},
+{
+  "serial-number": 6,
+  "hash": "ab933e49accfac1bf4b57752bcce5843e54f5f44",
+  "entry":
+  {
+    "fields": ["datatype", "phase", "text"],
+    "phase": "alpha",
+    "register": "datatype",
+    "registry": "cabinet-office",
+    "text": "Datatypes constraining values used by register fields and idenitifying ways in which it may be encoded a representation"
+  }
+}]
