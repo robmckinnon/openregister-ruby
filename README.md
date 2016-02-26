@@ -28,3 +28,22 @@ Each record is a Ruby object:
     register: country
     registry: foreign-commonwealth-office
     text: British English-language names and descriptive terms for countries
+
+### Retrieve a specific register's records
+
+To retrieve all records from a specific register:
+
+    register = OpenRegister.registers[1]
+    records = register.records
+
+Each record is a Ruby object with a class name derived from the register name:
+
+    puts records.first.to_yaml
+
+    --- !ruby/object:OpenRegister::Country
+    serial_number: 201
+    _hash: b24b537412095cd50fadce010fdeefeb5d3a4b71
+    citizen_names: Gambian
+    country: GM
+    name: Gambia,The
+    official_name: The Islamic Republic of The Gambia
