@@ -57,4 +57,17 @@
     "registry": "cabinet-office",
     "text": "Datatypes constraining values used by register fields and idenitifying ways in which it may be encoded a representation"
   }
-}]
+},
+{
+  "serial-number": 6,
+  "hash": "9db376033a0136dac33746cc30154978e5496828",
+  "entry":
+  {
+    "fields": ["food-premises-rating", "food-premises", "food-premises-rating-value", "food-premises-rating-hygiene-score", "food-premises-rating-structural-score", "food-premises-rating-confidence-in-management-score", "local-authority", "food-premises-rating-reply", "start-date", "inspector", "end-date"],
+    "phase": "alpha",
+    "register": "food-premises-rating",
+    "registry": "food-standards-agency",
+    "text": "Food hygiene inspection ratings"
+  }
+}
+]

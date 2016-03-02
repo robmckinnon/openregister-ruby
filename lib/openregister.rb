@@ -19,21 +19,30 @@ module OpenRegister
       records_for :register, from_openregister: from_openregister
     end
 
-    def records_for register, from_openregister: false
-      url = url_for('records', register, from_openregister)
-      list = retrieve url, register
-      list.each { |item| item.from_openregister = true } if list && from_openregister
-      list
+    def register register, from_openregister: false
+      registers(from_openregister: from_openregister).detect{ |r| r.register == register }
     end
 
-    def retrieve url, type
-      json_list = json_list(url+'.json')
-      json_list.map do |json|
-        Morph.from_json(json, type, OpenRegister)
-      end.flatten
+    def records_for register, from_openregister: false
+      url = url_for('records', register, from_openregister)
+      retrieve url, register, from_openregister
+    end
+
+    def record register, record, from_openregister: false
+      url = url_for "#{register}/#{record}", register, from_openregister
+      retrieve(url, register, from_openregister).first
     end
 
     private
+
+    def retrieve url, type, from_openregister
+      json_list = json_list(url+'.json')
+      list = json_list.map do |json|
+        Morph.from_json(json, type, OpenRegister)
+      end.flatten
+      list.each { |item| item.from_openregister = true } if from_openregister
+      list
+    end
 
     def url_for path, register, from_openregister
       if from_openregister

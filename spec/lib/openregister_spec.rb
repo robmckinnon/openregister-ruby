@@ -36,6 +36,18 @@ RSpec.describe OpenRegister do
             'Link': '<?page-index=1&page-size=100>; rel="previous"'
           })
     end
+
+    stub_request(:get, "http://food-premises-rating.openregister.org/records.json").
+        to_return(status: 200, body: File.new('./spec/fixtures/food-premises-rating-records.json'),
+          headers: {
+            'Content-Type': 'application/json'
+          })
+
+    stub_request(:get, "http://field.openregister.org/field/food-premises.json").
+        to_return(status: 200, body: File.new('./spec/fixtures/field-food-premises.json'),
+          headers: {
+            'Content-Type': 'application/json'
+          })
   end
 
   describe 'retrieve registers index' do
@@ -46,14 +58,14 @@ RSpec.describe OpenRegister do
     end
 
     it 'calls correct url' do
-      expect(OpenRegister).to receive(:retrieve).with('https://register.register.gov.uk/records', :register)
+      expect(OpenRegister).to receive(:retrieve).with('https://register.register.gov.uk/records', :register, false)
       OpenRegister.registers from_openregister: false
     end
   end
 
   describe 'retrieve registers index from openregister.org' do
     it 'calls correct url' do
-      expect(OpenRegister).to receive(:retrieve).with('http://register.openregister.org/records', :register)
+      expect(OpenRegister).to receive(:retrieve).with('http://register.openregister.org/records', :register, true)
       OpenRegister.registers from_openregister: true
     end
 
@@ -118,6 +130,28 @@ RSpec.describe OpenRegister do
       name: "Gambia,The",
       official_name: "The Islamic Republic of The Gambia",
       from_openregister: true
+    }
+  end
+
+  describe 'retrieve register by name' do
+    it 'returns register' do
+      register = OpenRegister.register('food-premises-rating', from_openregister: true)
+      expect(register.register).to eq('food-premises-rating')
+    end
+  end
+
+  describe 'retrieve specific record from a given register' do
+    subject { OpenRegister.record('field', 'food-premises', from_openregister: true) }
+
+    include_examples 'has attributes', {
+      serial_number: 24,
+      _hash: 'b6a6f32b15f3aa55327b97c4729413f7bf0d321f',
+      cardinality: "1",
+      datatype: "string",
+      field: "food-premises",
+      phase: "alpha",
+      register: "food-premises",
+      text: "A premises which serves or processes food."
     }
   end
 
