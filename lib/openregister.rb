@@ -8,19 +8,22 @@ end
 class OpenRegister::Register
   include Morph
   def records
-    OpenRegister::records_for register.to_sym
+    OpenRegister::records_for register.to_sym, from_openregister: try(:from_openregister)
   end
 end
 
 module OpenRegister
   class << self
 
-    def registers
-      records_for :register
+    def registers from_openregister: false
+      records_for :register, from_openregister: from_openregister
     end
 
-    def records_for register
-      retrieve "https://#{register}.register.gov.uk/records", register
+    def records_for register, from_openregister: false
+      url = url_for('records', register, from_openregister)
+      list = retrieve url, register
+      list.each { |item| item.from_openregister = true } if list && from_openregister
+      list
     end
 
     def retrieve url, type
@@ -31,6 +34,14 @@ module OpenRegister
     end
 
     private
+
+    def url_for path, register, from_openregister
+      if from_openregister
+        "http://#{register}.openregister.org/#{path}"
+      else
+        "https://#{register}.register.gov.uk/#{path}"
+      end
+    end
 
     def json_list url
       response = RestClient.get(url)

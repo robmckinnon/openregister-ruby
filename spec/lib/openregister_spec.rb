@@ -3,24 +3,39 @@ require_relative '../../lib/openregister'
 RSpec.describe OpenRegister do
 
   before do
-    stub_request(:get, "https://register.register.gov.uk/records.json").
-      to_return(status: 200,
-        body: File.new('./spec/fixtures/register-records.json'),
-        headers: { 'Content-Type': 'application/json' })
+    [
+      "https://register.register.gov.uk/records.json",
+      "http://register.openregister.org/records.json"
+    ].each do |url|
+      stub_request(:get, url).
+        to_return(status: 200,
+          body: File.new('./spec/fixtures/register-records.json'),
+          headers: { 'Content-Type': 'application/json' })
+    end
 
-    stub_request(:get, "https://country.register.gov.uk/records.json").
-      to_return(status: 200, body: File.new('./spec/fixtures/country-records-1.json'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Link': '<?page-index=2&page-size=100>; rel="next"'
-        })
+    [
+      "https://country.register.gov.uk/records.json",
+      "http://country.openregister.org/records.json"
+    ].each do |url|
+      stub_request(:get, url).
+        to_return(status: 200, body: File.new('./spec/fixtures/country-records-1.json'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Link': '<?page-index=2&page-size=100>; rel="next"'
+          })
+    end
 
-    stub_request(:get, "https://country.register.gov.uk/records.json?page-index=2&page-size=100").
-      to_return(status: 200, body: File.new('./spec/fixtures/country-records-2.json'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Link': '<?page-index=1&page-size=100>; rel="previous"'
-        })
+    [
+      "https://country.register.gov.uk/records.json?page-index=2&page-size=100",
+      "http://country.openregister.org/records.json?page-index=2&page-size=100"
+    ].each do |url|
+      stub_request(:get, url).
+        to_return(status: 200, body: File.new('./spec/fixtures/country-records-2.json'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Link': '<?page-index=1&page-size=100>; rel="previous"'
+          })
+    end
   end
 
   describe 'retrieve registers index' do
@@ -28,6 +43,25 @@ RSpec.describe OpenRegister do
       records = OpenRegister.registers
       expect(records).to be_an(Array)
       records.each { |r| expect(r).to be_an('OpenRegister::Register'.constantize) }
+    end
+
+    it 'calls correct url' do
+      expect(OpenRegister).to receive(:retrieve).with('https://register.register.gov.uk/records', :register)
+      OpenRegister.registers from_openregister: false
+    end
+  end
+
+  describe 'retrieve registers index from openregister.org' do
+    it 'calls correct url' do
+      expect(OpenRegister).to receive(:retrieve).with('http://register.openregister.org/records', :register)
+      OpenRegister.registers from_openregister: true
+    end
+
+    it 'returns array of Ruby objects with from_openregister set true' do
+      records = OpenRegister.registers from_openregister: true
+      expect(records).to be_an(Array)
+      records.each { |r| expect(r).to be_an('OpenRegister::Register'.constantize) }
+      records.each { |r| expect(r.from_openregister).to be(true) }
     end
   end
 
@@ -70,6 +104,20 @@ RSpec.describe OpenRegister do
       country: "GM",
       name: "Gambia,The",
       official_name: "The Islamic Republic of The Gambia"
+    }
+  end
+
+  describe 'retrieved register record from openregister.org' do
+    subject { OpenRegister.registers(from_openregister: true)[1].records[0] }
+
+    include_examples 'has attributes', {
+      serial_number: 201,
+      _hash: 'b24b537412095cd50fadce010fdeefeb5d3a4b71',
+      citizen_names: "Gambian",
+      country: "GM",
+      name: "Gambia,The",
+      official_name: "The Islamic Republic of The Gambia",
+      from_openregister: true
     }
   end
 

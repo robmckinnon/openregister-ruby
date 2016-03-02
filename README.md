@@ -5,9 +5,13 @@ A Ruby API to UK government data registers http://www.openregister.org/
 
 ### Retrieve list of registers
 
-To retrieve all records from the register register:
+To retrieve all registers from register.gov.uk:
 
     OpenRegister.registers
+
+To retrieve all registers from openregister.org:
+
+    OpenRegister.registers from_openregister: true
 
 Each record is a Ruby object:
 
