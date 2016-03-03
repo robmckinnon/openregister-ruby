@@ -2,7 +2,11 @@ require_relative '../../lib/openregister'
 
 RSpec.describe OpenRegister do
 
-  def stub_json_request
+  def stub_json_request url, fixture, headers: {}
+    stub_request(:get, url).
+      to_return(status: 200,
+        body: File.new(fixture),
+        headers: { 'Content-Type': 'application/json' }.merge(headers) )
   end
 
   before do
@@ -12,53 +16,33 @@ RSpec.describe OpenRegister do
       "https://register.register.gov.uk/records.json",
       "http://register.openregister.org/records.json"
     ].each do |url|
-      stub_request(:get, url).
-        to_return(status: 200,
-          body: File.new('./spec/fixtures/register-records.json'),
-          headers: { 'Content-Type': 'application/json' })
+      stub_json_request(url, './spec/fixtures/register-records.json')
     end
 
     [
       "https://country.register.gov.uk/records.json",
       "http://country.openregister.org/records.json"
     ].each do |url|
-      stub_request(:get, url).
-        to_return(status: 200, body: File.new('./spec/fixtures/country-records-1.json'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Link': '<?page-index=2&page-size=100>; rel="next"'
-          })
+      stub_json_request(url, './spec/fixtures/country-records-1.json',
+        headers: { 'Link': '<?page-index=2&page-size=100>; rel="next"' })
     end
 
     [
       "https://country.register.gov.uk/records.json?page-index=2&page-size=100",
       "http://country.openregister.org/records.json?page-index=2&page-size=100"
     ].each do |url|
-      stub_request(:get, url).
-        to_return(status: 200, body: File.new('./spec/fixtures/country-records-2.json'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Link': '<?page-index=1&page-size=100>; rel="previous"'
-          })
+      stub_json_request(url, './spec/fixtures/country-records-2.json',
+        headers: { 'Link': '<?page-index=1&page-size=100>; rel="previous"' })
     end
 
-    stub_request(:get, "http://food-premises-rating.openregister.org/records.json").
-        to_return(status: 200, body: File.new('./spec/fixtures/food-premises-rating-records.json'),
-          headers: {
-            'Content-Type': 'application/json'
-          })
+    stub_json_request("http://food-premises-rating.openregister.org/records.json",
+      './spec/fixtures/food-premises-rating-records.json')
 
-    stub_request(:get, "http://field.openregister.org/field/food-premises.json").
-        to_return(status: 200, body: File.new('./spec/fixtures/field-food-premises.json'),
-          headers: {
-            'Content-Type': 'application/json'
-          })
+    stub_json_request("http://field.openregister.org/field/food-premises.json",
+      './spec/fixtures/field-food-premises.json')
 
-    stub_request(:get, "http://food-premises.openregister.org/food-premises/759332.json").
-        to_return(status: 200, body: File.new('./spec/fixtures/premises-10372274000.json'),
-          headers: {
-            'Content-Type': 'application/json'
-          })
+    stub_json_request("http://food-premises.openregister.org/food-premises/759332.json",
+      './spec/fixtures/premises-10372274000.json')
   end
 
   describe 'retrieve registers index' do
