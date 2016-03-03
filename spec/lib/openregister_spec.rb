@@ -99,7 +99,7 @@ RSpec.describe OpenRegister do
 
   describe 'retrieve a register\'s records handling pagination' do
     it 'returns records as Ruby objects' do
-      records = OpenRegister.registers[1].records
+      records = OpenRegister.registers[1].all_records
       expect(records).to be_an(Array)
       records.each { |r| expect(r).to be_an(OpenRegister::Country) }
       expect(records.size).to eq(2)
@@ -107,7 +107,7 @@ RSpec.describe OpenRegister do
   end
 
   describe 'retrieved register record' do
-    subject { OpenRegister.registers[1].records[0] }
+    subject { OpenRegister.registers[1].all_records[0] }
 
     include_examples 'has attributes', {
       serial_number: 201,
@@ -120,7 +120,7 @@ RSpec.describe OpenRegister do
   end
 
   describe 'retrieved register record from openregister.org' do
-    subject { OpenRegister.registers(from_openregister: true)[1].records[0] }
+    subject { OpenRegister.registers(from_openregister: true)[1].all_records[0] }
 
     include_examples 'has attributes', {
       serial_number: 201,

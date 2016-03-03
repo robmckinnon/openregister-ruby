@@ -7,7 +7,7 @@ end
 
 class OpenRegister::Register
   include Morph
-  def records
+  def all_records
     OpenRegister::records_for register.to_sym, from_openregister: try(:from_openregister)
   end
 end
