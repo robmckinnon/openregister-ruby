@@ -8,6 +8,10 @@ end
 class OpenRegister::Register
   include Morph
   def all_records
+    OpenRegister::records_for register.to_sym, from_openregister: try(:from_openregister), all: true
+  end
+
+  def records
     OpenRegister::records_for register.to_sym, from_openregister: try(:from_openregister)
   end
 end
@@ -16,16 +20,16 @@ module OpenRegister
   class << self
 
     def registers from_openregister: false
-      records_for :register, from_openregister: from_openregister
+      records_for :register, from_openregister: from_openregister, all: true
     end
 
     def register register, from_openregister: false
       registers(from_openregister: from_openregister).detect{ |r| r.register == register }
     end
 
-    def records_for register, from_openregister: false
+    def records_for register, from_openregister: false, all: false
       url = url_for('records', register, from_openregister)
-      retrieve url, register, from_openregister
+      retrieve url, register, from_openregister, all
     end
 
     def record register, record, from_openregister: false
@@ -35,8 +39,8 @@ module OpenRegister
 
     private
 
-    def retrieve url, type, from_openregister
-      json_list = json_list(url+'.json')
+    def retrieve url, type, from_openregister, all=false
+      json_list = json_list(url+'.json', all)
       list = json_list.map do |json|
         Morph.from_json(json, type, OpenRegister)
       end.flatten
@@ -52,14 +56,14 @@ module OpenRegister
       end
     end
 
-    def json_list url
+    def json_list url, all
       response = RestClient.get(url)
       json = munge response.body
       list = [json]
-      if link_header = response.headers[:link]
+      if all && link_header = response.headers[:link]
         if rel_next = links(link_header)[:next]
           next_url = "#{url}#{rel_next}"
-          list << json_list(next_url)
+          list << json_list(next_url, all)
         end
       end
       list.flatten

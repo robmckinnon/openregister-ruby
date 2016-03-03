@@ -58,14 +58,14 @@ RSpec.describe OpenRegister do
     end
 
     it 'calls correct url' do
-      expect(OpenRegister).to receive(:retrieve).with('https://register.register.gov.uk/records', :register, false)
+      expect(OpenRegister).to receive(:retrieve).with('https://register.register.gov.uk/records', :register, false, true)
       OpenRegister.registers from_openregister: false
     end
   end
 
   describe 'retrieve registers index from openregister.org' do
     it 'calls correct url' do
-      expect(OpenRegister).to receive(:retrieve).with('http://register.openregister.org/records', :register, true)
+      expect(OpenRegister).to receive(:retrieve).with('http://register.openregister.org/records', :register, true, true)
       OpenRegister.registers from_openregister: true
     end
 
@@ -97,12 +97,21 @@ RSpec.describe OpenRegister do
     }
   end
 
-  describe 'retrieve a register\'s records handling pagination' do
+  describe 'retrieve all a register\'s records handling pagination' do
     it 'returns records as Ruby objects' do
       records = OpenRegister.registers[1].all_records
       expect(records).to be_an(Array)
       records.each { |r| expect(r).to be_an(OpenRegister::Country) }
       expect(records.size).to eq(2)
+    end
+  end
+
+  describe 'retrieve a register\'s records first page only' do
+    it 'returns records as Ruby objects' do
+      records = OpenRegister.registers[1].records
+      expect(records).to be_an(Array)
+      records.each { |r| expect(r).to be_an(OpenRegister::Country) }
+      expect(records.size).to eq(1)
     end
   end
 
