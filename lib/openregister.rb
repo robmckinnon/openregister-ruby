@@ -16,6 +16,10 @@ class OpenRegister::Register
   end
 end
 
+class OpenRegister::Field
+  include Morph
+end
+
 module OpenRegister
   class << self
 
@@ -37,15 +41,36 @@ module OpenRegister
       retrieve(url, register, from_openregister).first
     end
 
+    def field record, from_openregister: false
+      record('field', record, from_openregister: from_openregister)
+    end
+
     private
 
-    def retrieve url, type, from_openregister, all=false
-      json_list = json_list(url+'.json', all)
-      list = json_list.map do |json|
-        Morph.from_json(json, type, OpenRegister)
-      end.flatten
-      list.each { |item| item.from_openregister = true } if from_openregister
+    def set_morph_listener from_openregister
+      @listeners ||= {}
+      @listeners[from_openregister] ||= OpenRegister::MorphListener.new from_openregister
+      Morph.register_listener @listeners[from_openregister]
+    end
+
+    def unset_morph_listener from_openregister
+      Morph.unregister_listener @listeners[from_openregister]
+    end
+
+    def augment_register_fields from_openregister, &block
+      set_morph_listener(from_openregister)
+      list = yield
+      unset_morph_listener(from_openregister)
       list
+    end
+
+    def retrieve url, type, from_openregister, all=false
+      augment_register_fields(from_openregister) do
+        json_list = json_list(url+'.json', all)
+        list = json_list.map { |json| Morph.from_json(json, type, OpenRegister) }.flatten
+        list.each { |item| item.from_openregister = true } if from_openregister
+        list
+      end
     end
 
     def url_for path, register, from_openregister
@@ -85,4 +110,48 @@ module OpenRegister
     end
 
   end
+end
+
+class OpenRegister::MorphListener
+
+  def initialize from_openregister
+    @from_openregister = from_openregister
+  end
+
+  def call klass, symbol
+    if !register_or_field_class?(klass) && !hash_or_serial?(symbol)
+      add_method_to_access_field_record klass, symbol
+    end
+  end
+
+  private
+
+  def register_or_field_class? klass
+    ['OpenRegister::Register', 'OpenRegister::Field'].include? klass.name
+  end
+
+  def hash_or_serial? symbol
+    [:_hash, :serial_number].include? symbol
+  end
+
+  def field_name symbol
+    symbol.to_s.gsub('_','-')
+  end
+
+  def register_for_field symbol
+    field = OpenRegister::field field_name(symbol), from_openregister: @from_openregister
+    register = field.register
+    register if register && register.size > 0
+  end
+
+  def add_method_to_access_field_record klass, symbol
+    register = register_for_field(symbol)
+    klass.class_eval method_def(symbol, register) if register
+  end
+
+  def method_def symbol, register
+    method = "_#{symbol}"
+    "def #{method}; OpenRegister.record('#{register}', send(:#{symbol}), from_openregister: #{@from_openregister} ); end"
+  end
+
 end

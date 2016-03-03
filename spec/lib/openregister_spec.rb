@@ -2,7 +2,12 @@ require_relative '../../lib/openregister'
 
 RSpec.describe OpenRegister do
 
+  def stub_json_request
+  end
+
   before do
+    allow(OpenRegister).to receive(:field).and_return double(register: '')
+
     [
       "https://register.register.gov.uk/records.json",
       "http://register.openregister.org/records.json"
@@ -45,6 +50,12 @@ RSpec.describe OpenRegister do
 
     stub_request(:get, "http://field.openregister.org/field/food-premises.json").
         to_return(status: 200, body: File.new('./spec/fixtures/field-food-premises.json'),
+          headers: {
+            'Content-Type': 'application/json'
+          })
+
+    stub_request(:get, "http://food-premises.openregister.org/food-premises/759332.json").
+        to_return(status: 200, body: File.new('./spec/fixtures/premises-10372274000.json'),
           headers: {
             'Content-Type': 'application/json'
           })
@@ -149,9 +160,18 @@ RSpec.describe OpenRegister do
     end
   end
 
-  describe 'retrieve specific record from a given register' do
-    subject { OpenRegister.record('field', 'food-premises', from_openregister: true) }
+  describe 'retrieve a record linked to from another record' do
+    it 'returns linked record from another register' do
+      expect(OpenRegister).to receive(:field).with('food-premises', from_openregister: true).
+        and_return double(register: 'food-premises')
 
+      register = OpenRegister.register('food-premises-rating', from_openregister: true)
+      record = register.all_records.first
+      expect(record._food_premises.class.name).to eq('OpenRegister::FoodPremises')
+    end
+  end
+
+  shared_examples 'has field attributes' do
     include_examples 'has attributes', {
       serial_number: 24,
       _hash: 'b6a6f32b15f3aa55327b97c4729413f7bf0d321f',
@@ -162,6 +182,11 @@ RSpec.describe OpenRegister do
       register: "food-premises",
       text: "A premises which serves or processes food."
     }
+  end
+
+  describe 'retrieve specific record from a given register' do
+    subject { OpenRegister.record('field', 'food-premises', from_openregister: true) }
+    include_examples 'has field attributes'
   end
 
 end
