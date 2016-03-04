@@ -7,8 +7,8 @@ end
 
 class OpenRegister::Register
   include Morph
-  def all_records
-    OpenRegister::records_for register.to_sym, from_openregister: try(:from_openregister), all: true
+  def all_records page_size: 100
+    OpenRegister::records_for register.to_sym, from_openregister: try(:from_openregister), all: true, page_size: page_size
   end
 
   def records
@@ -31,9 +31,9 @@ module OpenRegister
       registers(from_openregister: from_openregister).detect{ |r| r.register == register }
     end
 
-    def records_for register, from_openregister: false, all: false
+    def records_for register, from_openregister: false, all: false, page_size: 100
       url = url_for('records', register, from_openregister)
-      retrieve url, register, from_openregister, all
+      retrieve url, register, from_openregister, all, page_size
     end
 
     def record register, record, from_openregister: false
@@ -51,26 +51,35 @@ module OpenRegister
       @listeners ||= {}
       @listeners[from_openregister] ||= OpenRegister::MorphListener.new from_openregister
       Morph.register_listener @listeners[from_openregister]
+      @morph_listener_set = true
     end
 
     def unset_morph_listener from_openregister
       Morph.unregister_listener @listeners[from_openregister]
+      @morph_listener_set = false
     end
 
     def augment_register_fields from_openregister, &block
-      set_morph_listener(from_openregister)
+      already_set = (@morph_listener_set || false)
+      set_morph_listener(from_openregister) unless already_set
       list = yield
-      unset_morph_listener(from_openregister)
+      unset_morph_listener(from_openregister) unless already_set
       list
     end
 
-    def retrieve url, type, from_openregister, all=false
-      augment_register_fields(from_openregister) do
-        json_list = json_list(url+'.json', all)
-        list = json_list.map { |json| Morph.from_json(json, type, OpenRegister) }.flatten
-        list.each { |item| item.from_openregister = true } if from_openregister
-        list
+    def retrieve url, type, from_openregister, all=false, page_size=100
+      list = augment_register_fields(from_openregister) do
+        url = url+'.json'
+        url = "#{url}?page-index=1&page-size=#{page_size}" if page_size != 100
+        json_list = json_list(url, all)
+        if json_list.first[/^entry/]
+          json_list.map { |tsv| Morph.from_tsv(tsv, type, OpenRegister) }.flatten
+        else
+          json_list.map { |json| Morph.from_json(json, type, OpenRegister) }.flatten
+        end
       end
+      list.each { |item| item.from_openregister = true } if from_openregister
+      list
     end
 
     def url_for path, register, from_openregister
@@ -83,15 +92,22 @@ module OpenRegister
 
     def json_list url, all
       response = RestClient.get(url)
-      json = munge response.body
-      list = [json]
-      if all && link_header = response.headers[:link]
-        if rel_next = links(link_header)[:next]
-          next_url = "#{url}#{rel_next}"
-          list << json_list(next_url, all)
+      if response.body[/^entry/]
+        tsv = response.body
+        list = [tsv]
+      else
+        json = munge response.body
+        list = [json]
+        if all && link_header = response.headers[:link]
+          if rel_next = links(link_header)[:next]
+            next_url = "#{url.split('?').first}#{rel_next}"
+            list << json_list(next_url, all)
+          end
         end
+        list.flatten
       end
-      list.flatten
+    rescue RestClient::ResourceNotFound => e
+      []
     end
 
     def munge json
@@ -119,39 +135,81 @@ class OpenRegister::MorphListener
   end
 
   def call klass, symbol
-    if !register_or_field_class?(klass) && !hash_or_serial?(symbol)
+    return if @handling && @handling == [klass, symbol]
+    @handling = [klass, symbol]
+    if !register_or_field_class?(klass, symbol) && !hash_or_serial?(symbol) && !augmented_field?(symbol)
       add_method_to_access_field_record klass, symbol
     end
   end
 
   private
 
-  def register_or_field_class? klass
-    ['OpenRegister::Register', 'OpenRegister::Field'].include? klass.name
+  def register_or_field_class? klass, symbol
+    klass.name == 'OpenRegister::Field' || (klass.name == 'OpenRegister::Register' && symbol != :fields)
   end
 
   def hash_or_serial? symbol
     [:_hash, :serial_number].include? symbol
   end
 
+  def augmented_field? symbol
+    symbol.to_s[/^_/]
+  end
+
   def field_name symbol
     symbol.to_s.gsub('_','-')
   end
 
-  def register_for_field symbol
-    field = OpenRegister::field field_name(symbol), from_openregister: @from_openregister
-    register = field.register
-    register if register && register.size > 0
+  def field symbol
+    OpenRegister::field field_name(symbol), from_openregister: @from_openregister
+  end
+
+  def datatype_curie? field
+    field && field.datatype == 'curie'
+  end
+
+  def register_for_field field
+    field.register if field && field.register && field.register.size > 0
   end
 
   def add_method_to_access_field_record klass, symbol
-    register = register_for_field(symbol)
-    klass.class_eval method_def(symbol, register) if register
+    field = field(symbol)
+    method = if datatype_curie? field
+               curie_retreive_method(symbol)
+             elsif register = register_for_field(field)
+               retreive_method(symbol, register)
+             elsif cardinality_n? field
+               n_split_method(symbol)
+             end
+    klass.class_eval method if method
   end
 
-  def method_def symbol, register
+  def cardinality_n? field
+    field.cardinality == 'n'
+  end
+
+  def n_split_method symbol
+    "def #{symbol}
+  @#{symbol} = @#{symbol}.split(';') unless @#{symbol}.is_a?(Array)
+  @#{symbol}
+end"
+  end
+
+  def curie_retreive_method symbol
     method = "_#{symbol}"
-    "def #{method}; OpenRegister.record('#{register}', send(:#{symbol}), from_openregister: #{@from_openregister} ); end"
+    "def #{method}
+  curie = send(:#{symbol}).split(':')
+  register = curie.first
+  field = curie.last
+  @#{method} ||= OpenRegister.record(register, field, from_openregister: #{@from_openregister} )
+end"
+  end
+
+  def retreive_method symbol, register
+    method = "_#{symbol}"
+    "def #{method}
+  @#{method} ||= OpenRegister.record('#{register}', send(:#{symbol}), from_openregister: #{@from_openregister} )
+end"
   end
 
 end
