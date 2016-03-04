@@ -51,3 +51,75 @@ Each record is a Ruby object with a class name derived from the register name:
     country: GM
     name: Gambia,The
     official_name: The Islamic Republic of The Gambia
+
+### Retrieve records linked from a specific record
+
+Retrieve a food premises rating:
+
+    register = OpenRegister.register 'food-premises-rating', from_openregister: true
+    rating = register.records.first
+
+    --- !ruby/object:OpenRegister::FoodPremisesRating
+    serial_number: 512920
+    _hash: cf0caf7777c57ddc4c7dec859f186ac34b4b6733
+    food_premises: '759332'
+    food_premises_rating: 7593322014-04-09
+    food_premises_rating_confidence_in_management_score: '5'
+    food_premises_rating_hygiene_score: '5'
+    food_premises_rating_structural_score: '10'
+    food_premises_rating_value: '4'
+    inspector: local-authority:506
+    start_date: '2014-04-09'
+    from_openregister: true
+
+Retrieve the inspector from the rating:
+
+    rating._inspector
+
+    --- !ruby/object:OpenRegister::LocalAuthority
+    serial_number: 408
+    _hash: e124e235606b8de334803031567fe4d8e5903ffa
+    local_authority: '506'
+    name: Camden
+    website: https://www.camden.gov.uk
+    from_openregister: true
+
+Retrieve the food premises from the rating:
+
+    rating._food_premises
+
+    --- !ruby/object:OpenRegister::FoodPremises
+    serial_number: 11
+    _hash: 831dab74ad10d89d4d23e167e42a9691a0e77fca
+    business: company:07228130
+    food_premises: '759332'
+    food_premises_types: []
+    local_authority: '506'
+    name: Byron
+    premises: '15662079000'
+    from_openregister: true
+
+Retrieve the business from the food premises:
+
+    rating._food_premises._business
+
+    --- !ruby/object:OpenRegister::Company
+    serial_number: 4
+    _hash: e6b3efd149ae1945f0b6228db7f89eba1f14dd9b
+    company: 07228130
+    industry: '56101'
+    name: BYRON HAMBURGERS LIMITED
+    registered_office: '10033530330'
+    start_date: '2010-04-20'
+    from_openregister: true
+
+Retrieve the industry from the business:
+
+    rating._food_premises._business._industry
+
+    --- !ruby/object:OpenRegister::Industry
+    serial_number: 546
+    _hash: 0fbe953759c82b8b9309ba9f4a89277b716ee872
+    industry: '56101'
+    name: 'Licensed restaurants '
+    from_openregister: true
