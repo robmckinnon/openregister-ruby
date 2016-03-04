@@ -1,0 +1,7 @@
+entry	copyright	fields	phase	register	registry	text
+10		field;datatype;phase;register;cardinality;text	alpha	field	cabinet-office	Field names which may appear in a register
+9		country;name;official-name;citizen-names;start-date;end-date	alpha	country	foreign-commonwealth-office	British English-language names and descriptive terms for countries
+8		public-body;name;website;public-body-type;parent-bodies;text;crest;official-colour	alpha	public-body	cabinet-office	Ministerial Departments and agencies sponsored by HM Government
+7		register;text;registry;phase;copyright;fields	alpha	register	cabinet-office	Registers maintained by HM Government
+6		datatype;phase;text	alpha	datatype	cabinet-office	Datatypes constraining values used by register fields and idenitifying ways in which it may be encoded a representation
+5		food-premises-rating;food-premises;food-premises-rating-value;food-premises-rating-hygiene-score;food-premises-rating-structural-score;food-premises-rating-confidence-in-management-score;local-authority;food-premises-rating-reply;start-date;inspector;end-date	alpha	food-premises-rating	food-standards-agency	Food hygiene inspection ratings

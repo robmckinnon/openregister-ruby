@@ -10,6 +10,8 @@
 /test/version_tmp/
 /tmp/
 \#*
+/spec/fixtures/*.json
+.DS_Store
 
 ## Specific to RubyMotion:
 .dat*

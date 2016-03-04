@@ -2,11 +2,11 @@ require_relative '../../lib/openregister'
 
 RSpec.describe OpenRegister do
 
-  def stub_json_request url, fixture, headers: {}
+  def stub_tsv_request url, fixture, headers: {}
     stub_request(:get, url).
       to_return(status: 200,
         body: File.new(fixture),
-        headers: { 'Content-Type': 'application/json' }.merge(headers) )
+        headers: { 'Content-Type': 'text/tab-separated-values;charset=UTF-8' }.merge(headers) )
   end
 
   before do
@@ -15,43 +15,42 @@ RSpec.describe OpenRegister do
       and_return double(register: '', datatype: 'string', cardinality: 'n')
 
     [
-      "https://register.register.gov.uk/records.json",
-      "http://register.openregister.org/records.json"
+      'https://register.register.gov.uk/records.tsv',
+      'http://register.openregister.org/records.tsv'
     ].each do |url|
-      # stub_json_request(url, './spec/fixtures/register-records.json')
-      stub_json_request(url, './spec/fixtures/tsv/register-records.tsv')
+      stub_tsv_request(url, './spec/fixtures/tsv/register-records.tsv')
     end
 
     [
-      "https://country.register.gov.uk/records.json",
-      "http://country.openregister.org/records.json"
+      'https://country.register.gov.uk/records.tsv',
+      'http://country.openregister.org/records.tsv'
     ].each do |url|
-      stub_json_request(url, './spec/fixtures/country-records-1.json',
+      stub_tsv_request(url, './spec/fixtures/tsv/country-records-1.tsv',
         headers: { 'Link': '<?page-index=2&page-size=100>; rel="next"' })
     end
 
     [
-      "https://country.register.gov.uk/records.json?page-index=2&page-size=100",
-      "http://country.openregister.org/records.json?page-index=2&page-size=100"
+      'https://country.register.gov.uk/records.tsv?page-index=2&page-size=100',
+      'http://country.openregister.org/records.tsv?page-index=2&page-size=100'
     ].each do |url|
-      stub_json_request(url, './spec/fixtures/country-records-2.json',
+      stub_tsv_request(url, './spec/fixtures/tsv/country-records-2.tsv',
         headers: { 'Link': '<?page-index=1&page-size=100>; rel="previous"' })
     end
 
-    stub_json_request("http://food-premises-rating.openregister.org/records.json",
-      './spec/fixtures/food-premises-rating-records.json')
+    stub_tsv_request('http://food-premises-rating.openregister.org/records.tsv',
+      './spec/fixtures/tsv/food-premises-rating-records.tsv')
 
-    stub_json_request("http://field.openregister.org/field/food-premises.json",
-      './spec/fixtures/field-food-premises.json')
+    stub_tsv_request('http://field.openregister.org/field/food-premises.tsv',
+      './spec/fixtures/tsv/food-premises.tsv')
 
-    stub_json_request("http://food-premises.openregister.org/food-premises/759332.json",
-      './spec/fixtures/food-premises-759332.json')
+    stub_tsv_request('http://food-premises.openregister.org/food-premises/759332.tsv',
+      './spec/fixtures/tsv/food-premises-759332.tsv')
 
-    stub_json_request("http://company.openregister.org/company/07228130.json",
-      './spec/fixtures/company-07228130.json')
+    stub_tsv_request('http://company.openregister.org/company/07228130.tsv',
+      './spec/fixtures/tsv/company-07228130.tsv')
 
-    stub_json_request("http://premises.openregister.org/premises/15662079000.json",
-      './spec/fixtures/premises-15662079000.json')
+    stub_tsv_request('http://premises.openregister.org/premises/15662079000.tsv',
+      './spec/fixtures/tsv/premises-15662079000.tsv')
   end
 
   describe 'retrieve registers index' do
@@ -118,31 +117,27 @@ RSpec.describe OpenRegister do
     end
   end
 
+  shared_examples 'has record attributes' do
+    include_examples 'has attributes', {
+      entry: '201',
+      citizen_names: 'Gambian',
+      country: 'GM',
+      name: 'Gambia,The',
+      official_name: 'The Islamic Republic of The Gambia'
+    }
+  end
+
   describe 'retrieved register record' do
     subject { OpenRegister.registers[1].all_records[0] }
 
-    include_examples 'has attributes', {
-      serial_number: 201,
-      _hash: 'b24b537412095cd50fadce010fdeefeb5d3a4b71',
-      citizen_names: "Gambian",
-      country: "GM",
-      name: "Gambia,The",
-      official_name: "The Islamic Republic of The Gambia"
-    }
+    include_examples 'has record attributes'
   end
 
   describe 'retrieved register record from openregister.org' do
     subject { OpenRegister.registers(from_openregister: true)[1].all_records[0] }
 
-    include_examples 'has attributes', {
-      serial_number: 201,
-      _hash: 'b24b537412095cd50fadce010fdeefeb5d3a4b71',
-      citizen_names: "Gambian",
-      country: "GM",
-      name: "Gambia,The",
-      official_name: "The Islamic Republic of The Gambia",
-      from_openregister: true
-    }
+    include_examples 'has record attributes'
+    include_examples 'has attributes', { from_openregister: true }
   end
 
   describe 'retrieve register by name' do
@@ -173,14 +168,13 @@ RSpec.describe OpenRegister do
 
   shared_examples 'has field attributes' do
     include_examples 'has attributes', {
-      serial_number: 24,
-      _hash: 'b6a6f32b15f3aa55327b97c4729413f7bf0d321f',
-      cardinality: "1",
-      datatype: "string",
-      field: "food-premises",
-      phase: "alpha",
-      register: "food-premises",
-      text: "A premises which serves or processes food."
+      entry: '24',
+      cardinality: '1',
+      datatype: 'string',
+      field: 'food-premises',
+      phase: 'alpha',
+      register: 'food-premises',
+      text: 'A premises which serves or processes food.'
     }
   end
 

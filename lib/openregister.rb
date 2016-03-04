@@ -69,13 +69,13 @@ module OpenRegister
 
     def retrieve url, type, from_openregister, all=false, page_size=100
       list = augment_register_fields(from_openregister) do
-        url = url+'.json'
+        url = url+'.tsv'
         url = "#{url}?page-index=1&page-size=#{page_size}" if page_size != 100
-        json_list = json_list(url, all)
-        if json_list.first[/^entry/]
-          json_list.map { |tsv| Morph.from_tsv(tsv, type, OpenRegister) }.flatten
+        response_list = response_list(url, all)
+        if response_list.first[/^entry/]
+          response_list.map { |tsv| Morph.from_tsv(tsv, type, OpenRegister) }.flatten
         else
-          json_list.map { |json| Morph.from_json(json, type, OpenRegister) }.flatten
+          response_list.map { |json| Morph.from_json(json, type, OpenRegister) }.flatten
         end
       end
       list.each { |item| item.from_openregister = true } if from_openregister
@@ -90,7 +90,7 @@ module OpenRegister
       end
     end
 
-    def json_list url, all
+    def response_list url, all
       response = RestClient.get(url)
       if response.body[/^entry/]
         tsv = response.body
@@ -98,14 +98,14 @@ module OpenRegister
       else
         json = munge response.body
         list = [json]
-        if all && link_header = response.headers[:link]
-          if rel_next = links(link_header)[:next]
-            next_url = "#{url.split('?').first}#{rel_next}"
-            list << json_list(next_url, all)
-          end
-        end
-        list.flatten
       end
+      if all && link_header = response.headers[:link]
+        if rel_next = links(link_header)[:next]
+          next_url = "#{url.split('?').first}#{rel_next}"
+          list << response_list(next_url, all)
+        end
+      end
+      list.flatten
     rescue RestClient::ResourceNotFound => e
       []
     end
