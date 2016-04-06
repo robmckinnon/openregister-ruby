@@ -5,13 +5,13 @@ A Ruby API to UK government data registers http://www.openregister.org/
 
 ### Retrieve list of registers
 
-To retrieve all registers from register.gov.uk:
+To retrieve all registers from [register.gov.uk](https://register.register.gov.uk/records):
 
 ```rb
 OpenRegister.registers
 ```
 
-To retrieve all registers from openregister.org:
+To retrieve all registers from [openregister.org](http://register.openregister.org/records):
 
 ```rb
 OpenRegister.registers from_openregister: true
@@ -90,7 +90,12 @@ start_date: '2014-04-09'
 from_openregister: true
 ```
 
-Retrieve the inspector from the rating:
+The record objects have methods prefixed with '_'
+for retrieving associated data records.
+
+For example, the rating above has an inspector value of
+`local-authority:506`. To retrieve the inspector record for
+this reference, call `_inspector` on the rating:
 
 ```rb
 rating._inspector
