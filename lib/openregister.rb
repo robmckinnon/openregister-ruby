@@ -127,13 +127,13 @@ end
 class OpenRegister::MorphListener
 
   def initialize from_openregister
-    @from_openregister = from_openregister
+    @from_openregister = from_openregister || false
   end
 
   def call klass, symbol
     return if @handling && @handling == [klass, symbol]
     @handling = [klass, symbol]
-    if !register_or_field_class?(klass, symbol) && !hash_or_serial?(symbol) && !augmented_field?(symbol)
+    if !register_or_field_class?(klass, symbol) && !hash_or_serial_or_entry?(symbol) && !augmented_field?(symbol)
       add_method_to_access_field_record klass, symbol
     end
   end
@@ -144,8 +144,8 @@ class OpenRegister::MorphListener
     klass.name == 'OpenRegister::Field' || (klass.name == 'OpenRegister::Register' && symbol != :fields)
   end
 
-  def hash_or_serial? symbol
-    [:_hash, :serial_number].include? symbol
+  def hash_or_serial_or_entry? symbol
+    [:_hash, :serial_number, :entry].include? symbol
   end
 
   def augmented_field? symbol
@@ -181,7 +181,7 @@ class OpenRegister::MorphListener
   end
 
   def cardinality_n? field
-    field.cardinality == 'n'
+    field.cardinality == 'n' if field && field.cardinality
   end
 
   def n_split_method symbol
