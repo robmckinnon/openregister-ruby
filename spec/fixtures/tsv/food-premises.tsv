@@ -1,0 +1,2 @@
+entry	cardinality	datatype	field	phase	register	text
+24	1	string	food-premises	alpha	food-premises	A premises which serves or processes food.
