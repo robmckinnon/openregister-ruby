@@ -85,7 +85,7 @@ module OpenRegister
 
     def url_for path, register, from_openregister
       if from_openregister
-        "http://#{register}.openregister.org/#{path}"
+        "http://#{register}.alpha.openregister.org/#{path}"
       else
         "https://#{register}.register.gov.uk/#{path}"
       end
