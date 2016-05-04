@@ -1,7 +1,7 @@
-entry	copyright	fields	phase	register	registry	text
-10		field;datatype;phase;register;cardinality;text	alpha	field	cabinet-office	Field names which may appear in a register
-9		country;name;official-name;citizen-names;start-date;end-date	alpha	country	foreign-commonwealth-office	British English-language names and descriptive terms for countries
-8		public-body;name;website;public-body-type;parent-bodies;text;crest;official-colour	alpha	public-body	cabinet-office	Ministerial Departments and agencies sponsored by HM Government
-7		register;text;registry;phase;copyright;fields	alpha	register	cabinet-office	Registers maintained by HM Government
-6		datatype;phase;text	alpha	datatype	cabinet-office	Datatypes constraining values used by register fields and idenitifying ways in which it may be encoded a representation
-5		food-premises-rating;food-premises;food-premises-rating-value;food-premises-rating-hygiene-score;food-premises-rating-structural-score;food-premises-rating-confidence-in-management-score;local-authority;food-premises-rating-reply;start-date;inspector;end-date	alpha	food-premises-rating	food-standards-agency	Food hygiene inspection ratings
+entry-number	item-hash	entry-timestamp	register	text	registry	phase	copyright	fields
+4	sha-256:ebb8bc0c3639577c5b7d01e5b5a382c52dfc7dee41c290bd8b29647db00259d4	2016-04-20T14:57:35Z	field	Field names which may appear in a register	cabinet-office	beta		field;datatype;phase;register;cardinality;text
+3	sha-256:610bde42d3ae2ed3dd829263fe461542742a10ca33865d96d31ae043b242c300	2016-04-20T14:57:35Z	country	British English-language names and descriptive terms for countries	foreign-commonwealth-office	beta		country;name;official-name;citizen-names;start-date;end-date
+2	sha-256:5fa9c4b569a71542c9c791203d54b6b94c125f189a9c529c63466a0b34cbe38c	2016-04-20T14:57:35Z	register	Registers maintained by HM Government	cabinet-office	beta		register;text;registry;phase;copyright;fields
+1	sha-256:85131084c2175bcea8d1113368b2783a32ee106d9150aed9881b7fa806e3ec47	2016-04-20T14:57:35Z	datatype	Datatypes constraining values used by register fields and idenitifying ways in which it may be encoded a representation	cabinet-office	beta		datatype;phase;text
+95	sha-256:af73462e95fbcc4da50e81e0f1f1006e0c52d433728eff0a406bfc7e53ad5358	2016-04-12T15:12:46Z	public-body	Ministerial Departments and agencies sponsored by HM Government	cabinet-office	alpha		public-body;name;website;public-body-type;parent-bodies;text;crest;official-colour
+96	sha-256:75eb4b008d76bbc3ca0fe6521af31cf98a78e87880c19d2cb759db9be9ad9b20	2016-04-12T15:12:46Z	food-premises-rating	Food hygiene inspection ratings	food-standards-agency	alpha		food-premises-rating;food-premises;food-premises-rating-value;food-premises-rating-hygiene-score;food-premises-rating-structural-score;food-premises-rating-confidence-in-management-score;local-authority;food-premises-rating-reply;start-date;inspector;end-date

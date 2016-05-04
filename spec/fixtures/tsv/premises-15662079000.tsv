@@ -1,2 +1,2 @@
-entry	address	end-date	premises	start-date
-1	5167078		15662079000
+entry-number	item-hash	entry-timestamp	premises	address	start-date	end-date
+1	sha-256:a8592404cad14262b387436dd360d4f81fa1659c8bae635d3dc69bda02a8e38f	2016-03-22T10:43:18Z	15662079000	5167078

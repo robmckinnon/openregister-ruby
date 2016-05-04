@@ -1,2 +1,2 @@
-entry	business	end-date	food-premises	food-premises-types	local-authority	name	premises	start-date
-11	company:07228130		759332		506	Byron	15662079000
+entry-number	item-hash	entry-timestamp	food-premises	name	business	food-premises-types	local-authority	premises	start-date	end-date
+11	sha-256:cdb325272d9f0d658616f9c36e3de595fc2b5ce51091696283cf2ca1d3d5741f	2016-03-22T10:43:15Z	759332	Byron	company:07228130		506	15662079000

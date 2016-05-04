@@ -1,2 +1,2 @@
-entry	citizen-names	country	end-date	name	official-name	start-date
-201	Gambian	GM		Gambia,The	The Islamic Republic of The Gambia
+entry-number	item-hash	entry-timestamp	country	name	official-name	citizen-names	start-date	end-date
+202	sha-256:dac66e05ee41707ff9115ed72705eaf8c2e0171285405bea9d859903e8f7ee40	2016-04-05T13:23:05Z	GM	The Gambia	The Islamic Republic of The Gambia	Gambian

@@ -1,2 +1,2 @@
-entry	citizen-names	country	end-date	name	official-name	start-date
-1	Soviet citizen	SU	1991-12-25	USSR	Union of Soviet Socialist Republics
+entry-number	item-hash	entry-timestamp	country	name	official-name	citizen-names	start-date	end-date
+1	sha-256:e94c4a9ab00d951dadde848ee2c9fe51628b22ff2e0a88bff4cca6e4e6086d7a	2016-04-05T13:23:05Z	SU	USSR	Union of Soviet Socialist Republics	Soviet citizen		1991-12-25

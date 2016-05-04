@@ -90,9 +90,9 @@ RSpec.describe OpenRegister do
     subject { OpenRegister.registers[1] }
 
     include_examples 'has attributes', {
-      entry: '9',
+      entry_number: '3',
       fields: ['country', 'name', 'official-name', 'citizen-names', 'start-date', 'end-date'],
-      phase: 'alpha',
+      phase: 'beta',
       register: 'country',
       registry: 'foreign-commonwealth-office',
       text: 'British English-language names and descriptive terms for countries'
@@ -119,10 +119,12 @@ RSpec.describe OpenRegister do
 
   shared_examples 'has record attributes' do
     include_examples 'has attributes', {
-      entry: '201',
+      entry_number: '202',
       citizen_names: 'Gambian',
       country: 'GM',
-      name: 'Gambia,The',
+      name: 'The Gambia',
+      official_name: 'The Islamic Republic of The Gambia',
+      entry_timestamp: '2016-04-05T13:23:05Z',
       official_name: 'The Islamic Republic of The Gambia'
     }
   end
@@ -168,7 +170,7 @@ RSpec.describe OpenRegister do
 
   shared_examples 'has field attributes' do
     include_examples 'has attributes', {
-      entry: '24',
+      entry_number: '352',
       cardinality: '1',
       datatype: 'string',
       field: 'food-premises',

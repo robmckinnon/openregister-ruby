@@ -145,7 +145,7 @@ class OpenRegister::MorphListener
   end
 
   def hash_or_serial_or_entry? symbol
-    [:_hash, :serial_number, :entry].include? symbol
+    [:entry_number, :entry_timestamp, :item_hash].include? symbol
   end
 
   def augmented_field? symbol
