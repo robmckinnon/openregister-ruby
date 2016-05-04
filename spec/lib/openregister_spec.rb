@@ -40,16 +40,16 @@ RSpec.describe OpenRegister do
     stub_tsv_request('http://food-premises-rating.openregister.org/records.tsv',
       './spec/fixtures/tsv/food-premises-rating-records.tsv')
 
-    stub_tsv_request('http://field.openregister.org/field/food-premises.tsv',
+    stub_tsv_request('http://field.openregister.org/record/food-premises.tsv',
       './spec/fixtures/tsv/food-premises.tsv')
 
-    stub_tsv_request('http://food-premises.openregister.org/food-premises/759332.tsv',
+    stub_tsv_request('http://food-premises.openregister.org/record/759332.tsv',
       './spec/fixtures/tsv/food-premises-759332.tsv')
 
-    stub_tsv_request('http://company.openregister.org/company/07228130.tsv',
+    stub_tsv_request('http://company.openregister.org/record/07228130.tsv',
       './spec/fixtures/tsv/company-07228130.tsv')
 
-    stub_tsv_request('http://premises.openregister.org/premises/15662079000.tsv',
+    stub_tsv_request('http://premises.openregister.org/record/15662079000.tsv',
       './spec/fixtures/tsv/premises-15662079000.tsv')
   end
 

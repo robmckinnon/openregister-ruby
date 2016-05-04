@@ -37,7 +37,7 @@ module OpenRegister
     end
 
     def record register, record, from_openregister: false
-      url = url_for "#{register}/#{record}", register, from_openregister
+      url = url_for "record/#{record}", register, from_openregister
       retrieve(url, register, from_openregister).first
     end
 
