@@ -217,21 +217,23 @@ end"
 
   def curie_retrieve_method symbol
     method = "_#{symbol}"
+    instance_variable = "@#{method}"
     "def #{method}
-  unless @#{method}
+  unless #{instance_variable}
     curie = send(:#{symbol}).split(':')
     register = curie.first
     field = curie.last
-    @#{method} = OpenRegister.record(register, field, from_openregister: #{@from_openregister} )
+    #{instance_variable} = OpenRegister.record(register, field, from_openregister: #{@from_openregister} )
   end
-  @#{method}
+  #{instance_variable}
 end"
   end
 
   def retrieve_method symbol, register
     method = "_#{symbol}"
+    instance_variable = "@#{method}"
     "def #{method}
-  @#{method} ||= OpenRegister.record('#{register}', send(:#{symbol}), from_openregister: #{@from_openregister} )
+  #{instance_variable} ||= OpenRegister.record('#{register}', send(:#{symbol}), from_openregister: #{@from_openregister} )
 end"
   end
 
