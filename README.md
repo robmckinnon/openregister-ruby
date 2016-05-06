@@ -33,7 +33,13 @@ register: country
 text: British English-language names and descriptive terms for countries
 registry: foreign-commonwealth-office
 phase: beta
-fields: country;name;official-name;citizen-names;start-date;end-date
+fields:
+- country
+- name
+- official-name
+- citizen-names
+- start-date
+- end-date
 ```
 
 ### Retrieve a specific register's records

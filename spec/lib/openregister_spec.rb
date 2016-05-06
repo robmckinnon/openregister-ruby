@@ -89,6 +89,11 @@ RSpec.describe OpenRegister do
   describe 'retrieved record' do
     subject { OpenRegister.registers[1] }
 
+    it 'has fields converted to array', focus: true do
+      fields = subject.instance_variable_get('@fields')
+      expect(fields).to eql(['country', 'name', 'official-name', 'citizen-names', 'start-date', 'end-date'])
+    end
+
     include_examples 'has attributes', {
       entry_number: '3',
       fields: ['country', 'name', 'official-name', 'citizen-names', 'start-date', 'end-date'],
