@@ -11,7 +11,7 @@ To retrieve all registers from [register.gov.uk](https://register.register.gov.u
 OpenRegister.registers
 ```
 
-To retrieve all registers from [openregister.org](http://register.openregister.org/records):
+To retrieve all registers from [alpha.openregister.org](http://register.alpha.openregister.org/records):
 
 ```rb
 OpenRegister.registers from_openregister: true
@@ -26,19 +26,14 @@ puts OpenRegister.registers[1].to_yaml
 
 ```yml
 --- !ruby/object:OpenRegister::Register
-serial_number: 9
-_hash: 247cf017d1b91ca8e0cd3abb60712224c6fa2b03
-fields:
-- country
-- name
-- official-name
-- citizen-names
-- start-date
-- end-date
-phase: alpha
+entry_number: '3'
+item_hash: sha-256:610bde42d3ae2ed3dd829263fe461542742a10ca33865d96d31ae043b242c300
+entry_timestamp: '2016-04-20T14:57:35Z'
 register: country
-registry: foreign-commonwealth-office
 text: British English-language names and descriptive terms for countries
+registry: foreign-commonwealth-office
+phase: beta
+fields: country;name;official-name;citizen-names;start-date;end-date
 ```
 
 ### Retrieve a specific register's records
@@ -58,12 +53,13 @@ puts records.first.to_yaml
 
 ```yml
 --- !ruby/object:OpenRegister::Country
-serial_number: 201
-_hash: b24b537412095cd50fadce010fdeefeb5d3a4b71
-citizen_names: Gambian
-country: GM
-name: Gambia,The
-official_name: The Islamic Republic of The Gambia
+entry_number: '204'
+item_hash: sha-256:466d194d5100532edd115e3f0035967b09bc7b7f5fc444166df6f4a5f7cb9127
+entry_timestamp: '2016-04-05T13:23:05Z'
+country: VA
+name: Vatican City
+official_name: Vatican City State
+citizen_names: Vatican citizen
 ```
 
 ### Retrieve records linked from a specific record
@@ -77,16 +73,17 @@ rating = register.records.first
 
 ```yml
 --- !ruby/object:OpenRegister::FoodPremisesRating
-serial_number: 512920
-_hash: cf0caf7777c57ddc4c7dec859f186ac34b4b6733
-food_premises: '759332'
+entry_number: '512920'
+item_hash: sha-256:59113a9ba41c0c0f019f70003b96d76cb7795a34a1e16514d0cd4c9e42079fda
+entry_timestamp: '2016-03-22T10:50:30Z'
 food_premises_rating: 7593322014-04-09
-food_premises_rating_confidence_in_management_score: '5'
+food_premises: '759332'
+food_premises_rating_value: '4'
 food_premises_rating_hygiene_score: '5'
 food_premises_rating_structural_score: '10'
-food_premises_rating_value: '4'
-inspector: local-authority:506
+food_premises_rating_confidence_in_management_score: '5'
 start_date: '2014-04-09'
+inspector: local-authority:506
 from_openregister: true
 ```
 
@@ -103,8 +100,9 @@ rating._inspector
 
 ```yml
 --- !ruby/object:OpenRegister::LocalAuthority
-serial_number: 408
-_hash: e124e235606b8de334803031567fe4d8e5903ffa
+entry_number: '407'
+item_hash: sha-256:efb42866fdd5abdc3039d9b90544c352489297a66f70e76761c79f65bd29ed8f
+entry_timestamp: '2016-03-31T12:21:09Z'
 local_authority: '506'
 name: Camden
 website: https://www.camden.gov.uk
@@ -119,13 +117,13 @@ rating._food_premises
 
 ```yml
 --- !ruby/object:OpenRegister::FoodPremises
-serial_number: 11
-_hash: 831dab74ad10d89d4d23e167e42a9691a0e77fca
-business: company:07228130
+entry_number: '11'
+item_hash: sha-256:cdb325272d9f0d658616f9c36e3de595fc2b5ce51091696283cf2ca1d3d5741f
+entry_timestamp: '2016-03-22T10:43:15Z'
 food_premises: '759332'
-food_premises_types: []
-local_authority: '506'
 name: Byron
+business: company:07228130
+local_authority: '506'
 premises: '15662079000'
 from_openregister: true
 ```
@@ -138,12 +136,13 @@ rating._food_premises._business
 
 ```yml
 --- !ruby/object:OpenRegister::Company
-serial_number: 4
-_hash: e6b3efd149ae1945f0b6228db7f89eba1f14dd9b
+entry_number: '2'
+item_hash: sha-256:454a74d390dcaa13d999a756b0eb933b81e03c909099e4bb26b1faffc26b5a93
+entry_timestamp: '2016-03-31T12:15:49Z'
 company: 07228130
-industry: '56101'
 name: BYRON HAMBURGERS LIMITED
 registered_office: '10033530330'
+industry: '56101'
 start_date: '2010-04-20'
 from_openregister: true
 ```
@@ -156,8 +155,9 @@ rating._food_premises._business._industry
 
 ```yml
 --- !ruby/object:OpenRegister::Industry
-serial_number: 546
-_hash: 0fbe953759c82b8b9309ba9f4a89277b716ee872
+entry_number: '1352'
+item_hash: sha-256:285a2fbb621fd898ecaa76bab487c2ec103887a4130500be296d5dca5248e46b
+entry_timestamp: '2016-03-31T13:44:24Z'
 industry: '56101'
 name: 'Licensed restaurants '
 from_openregister: true
