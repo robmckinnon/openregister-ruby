@@ -33,7 +33,13 @@ register: country
 text: British English-language names and descriptive terms for countries
 registry: foreign-commonwealth-office
 phase: beta
-fields: country;name;official-name;citizen-names;start-date;end-date
+fields:
+- country
+- name
+- official-name
+- citizen-names
+- start-date
+- end-date
 ```
 
 ### Retrieve a specific register's records
@@ -42,7 +48,7 @@ To retrieve all records from a specific register:
 
 ```rb
 register = OpenRegister.registers[1]
-records = register.records
+records = register._records
 ```
 
 Each record is a Ruby object with a class name derived from the register name:
@@ -68,7 +74,7 @@ Retrieve a food premises rating:
 
 ```rb
 register = OpenRegister.register 'food-premises-rating', from_openregister: true
-rating = register.records.first
+rating = register._records.first
 ```
 
 ```yml
@@ -84,7 +90,7 @@ food_premises_rating_structural_score: '10'
 food_premises_rating_confidence_in_management_score: '5'
 start_date: '2014-04-09'
 inspector: local-authority:506
-from_openregister: true
+_from_openregister: true
 ```
 
 The record objects have methods prefixed with '_'
@@ -106,7 +112,7 @@ entry_timestamp: '2016-03-31T12:21:09Z'
 local_authority: '506'
 name: Camden
 website: https://www.camden.gov.uk
-from_openregister: true
+_from_openregister: true
 ```
 
 Retrieve the food premises from the rating:
@@ -125,7 +131,7 @@ name: Byron
 business: company:07228130
 local_authority: '506'
 premises: '15662079000'
-from_openregister: true
+_from_openregister: true
 ```
 
 Retrieve the business from the food premises:
@@ -144,7 +150,7 @@ name: BYRON HAMBURGERS LIMITED
 registered_office: '10033530330'
 industry: '56101'
 start_date: '2010-04-20'
-from_openregister: true
+_from_openregister: true
 ```
 
 Retrieve the industry from the business:
@@ -160,5 +166,5 @@ item_hash: sha-256:285a2fbb621fd898ecaa76bab487c2ec103887a4130500be296d5dca5248e
 entry_timestamp: '2016-03-31T13:44:24Z'
 industry: '56101'
 name: 'Licensed restaurants '
-from_openregister: true
+_from_openregister: true
 ```

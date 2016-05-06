@@ -76,7 +76,7 @@ RSpec.describe OpenRegister do
       records = OpenRegister.registers from_openregister: true
       expect(records).to be_an(Array)
       records.each { |r| expect(r).to be_an('OpenRegister::Register'.constantize) }
-      records.each { |r| expect(r.from_openregister).to be(true) }
+      records.each { |r| expect(r._from_openregister).to be(true) }
     end
   end
 
@@ -88,6 +88,11 @@ RSpec.describe OpenRegister do
 
   describe 'retrieved record' do
     subject { OpenRegister.registers[1] }
+
+    it 'has fields converted to array', focus: true do
+      fields = subject.instance_variable_get('@fields')
+      expect(fields).to eql(['country', 'name', 'official-name', 'citizen-names', 'start-date', 'end-date'])
+    end
 
     include_examples 'has attributes', {
       entry_number: '3',
@@ -101,7 +106,7 @@ RSpec.describe OpenRegister do
 
   describe 'retrieve all a register\'s records handling pagination' do
     it 'returns records as Ruby objects' do
-      records = OpenRegister.registers[1].all_records
+      records = OpenRegister.registers[1]._all_records
       expect(records).to be_an(Array)
       records.each { |r| expect(r).to be_an(OpenRegister::Country) }
       expect(records.size).to eq(2)
@@ -110,7 +115,7 @@ RSpec.describe OpenRegister do
 
   describe 'retrieve a register\'s records first page only' do
     it 'returns records as Ruby objects' do
-      records = OpenRegister.registers[1].records
+      records = OpenRegister.registers[1]._records
       expect(records).to be_an(Array)
       records.each { |r| expect(r).to be_an(OpenRegister::Country) }
       expect(records.size).to eq(1)
@@ -125,21 +130,20 @@ RSpec.describe OpenRegister do
       name: 'The Gambia',
       official_name: 'The Islamic Republic of The Gambia',
       entry_timestamp: '2016-04-05T13:23:05Z',
-      official_name: 'The Islamic Republic of The Gambia'
     }
   end
 
   describe 'retrieved register record' do
-    subject { OpenRegister.registers[1].all_records[0] }
+    subject { OpenRegister.registers[1]._all_records[0] }
 
     include_examples 'has record attributes'
   end
 
   describe 'retrieved register record from openregister.org' do
-    subject { OpenRegister.registers(from_openregister: true)[1].all_records[0] }
+    subject { OpenRegister.registers(from_openregister: true)[1]._all_records[0] }
 
     include_examples 'has record attributes'
-    include_examples 'has attributes', { from_openregister: true }
+    include_examples 'has attributes', { _from_openregister: true }
   end
 
   describe 'retrieve register by name' do
@@ -161,7 +165,7 @@ RSpec.describe OpenRegister do
         and_return double(register: 'premises', datatype: 'string', cardinality: '1')
 
       register = OpenRegister.register('food-premises-rating', from_openregister: true)
-      record = register.records.first
+      record = register._records.first
       expect(record._food_premises._business.class.name).to eq('OpenRegister::Company')
       expect(record._food_premises._premises.class.name).to eq('OpenRegister::Premises')
       expect(record._food_premises.class.name).to eq('OpenRegister::FoodPremises')

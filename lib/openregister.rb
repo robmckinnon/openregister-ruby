@@ -7,17 +7,35 @@ end
 
 class OpenRegister::Register
   include Morph
-  def all_records page_size: 100
-    OpenRegister::records_for register.to_sym, from_openregister: try(:from_openregister), all: true, page_size: page_size
+  def _all_records page_size: 100
+    OpenRegister::records_for register.to_sym, from_openregister: try(:_from_openregister), all: true, page_size: page_size
   end
 
-  def records
-    OpenRegister::records_for register.to_sym, from_openregister: try(:from_openregister)
+  def _records
+    OpenRegister::records_for register.to_sym, from_openregister: try(:_from_openregister)
   end
 end
 
 class OpenRegister::Field
   include Morph
+end
+
+module OpenRegister::Helpers
+  def is_entry_resource_field? symbol
+    [:entry_number, :entry_timestamp, :item_hash].include? symbol
+  end
+
+  def augmented_field? symbol
+    symbol[/^_/]
+  end
+
+  def cardinality_n? field
+    field.cardinality == 'n' if field && field.cardinality
+  end
+
+  def field_name symbol
+    symbol.to_s.gsub('_','-')
+  end
 end
 
 module OpenRegister
@@ -42,10 +60,14 @@ module OpenRegister
     end
 
     def field record, from_openregister: false
-      record('field', record, from_openregister: from_openregister)
+      @fields ||= {}
+      key = "#{record}-#{from_openregister}"
+      @fields[key] ||= record('field', record, from_openregister: from_openregister)
     end
 
     private
+
+    include OpenRegister::Helpers
 
     def set_morph_listener from_openregister
       @listeners ||= {}
@@ -79,8 +101,24 @@ module OpenRegister
         end
         results
       end
-      list.each { |item| item.from_openregister = true } if from_openregister
+      list.each { |item| item._from_openregister = true } if from_openregister
+      list.each { |item| convert_n_cardinality_data! item }
       list
+    end
+
+    def convert_n_cardinality_data! item
+      return if item.is_a?(OpenRegister::Field)
+      from_openregister = (item.try(:_from_openregister)==true)
+      attributes = item.class.morph_attributes
+      cardinality_n_fields = attributes.select do |symbol|
+        !is_entry_resource_field?(symbol) &&
+          !augmented_field?(symbol) &&
+          (field = field(field_name(symbol), from_openregister: from_openregister)) &&
+          cardinality_n?(field)
+      end
+      cardinality_n_fields.each do |symbol|
+        item.send(symbol) # convert string to list
+      end
     end
 
     def url_for path, register, from_openregister
@@ -140,20 +178,10 @@ class OpenRegister::MorphListener
 
   private
 
+  include OpenRegister::Helpers
+
   def register_or_field_class? klass, symbol
     klass.name == 'OpenRegister::Field' || (klass.name == 'OpenRegister::Register' && symbol != :fields)
-  end
-
-  def is_entry_resource_field? symbol
-    [:entry_number, :entry_timestamp, :item_hash].include? symbol
-  end
-
-  def augmented_field? symbol
-    symbol.to_s[/^_/]
-  end
-
-  def field_name symbol
-    symbol.to_s.gsub('_','-')
   end
 
   def field symbol
@@ -171,40 +199,41 @@ class OpenRegister::MorphListener
   def add_method_to_access_field_record klass, symbol
     field = field(symbol)
     method = if datatype_curie? field
-               curie_retreive_method(symbol)
-             elsif register = register_for_field(field)
-               retreive_method(symbol, register)
+               curie_retrieve_method(symbol)
              elsif cardinality_n? field
                n_split_method(symbol)
+             elsif register = register_for_field(field)
+               retrieve_method(symbol, register)
              end
     klass.class_eval method if method
   end
 
-  def cardinality_n? field
-    field.cardinality == 'n' if field && field.cardinality
-  end
-
   def n_split_method symbol
     "def #{symbol}
-  @#{symbol} = @#{symbol}.split(';') unless @#{symbol}.is_a?(Array)
+  @#{symbol} = @#{symbol}.split(';') if @#{symbol} && !@#{symbol}.is_a?(Array)
   @#{symbol}
 end"
   end
 
-  def curie_retreive_method symbol
+  def curie_retrieve_method symbol
     method = "_#{symbol}"
+    instance_variable = "@#{method}"
     "def #{method}
-  curie = send(:#{symbol}).split(':')
-  register = curie.first
-  field = curie.last
-  @#{method} ||= OpenRegister.record(register, field, from_openregister: #{@from_openregister} )
+  unless #{instance_variable}
+    curie = send(:#{symbol}).split(':')
+    register = curie.first
+    field = curie.last
+    #{instance_variable} = OpenRegister.record(register, field, from_openregister: _from_openregister)
+  end
+  #{instance_variable}
 end"
   end
 
-  def retreive_method symbol, register
+  def retrieve_method symbol, register
     method = "_#{symbol}"
+    instance_variable = "@#{method}"
     "def #{method}
-  @#{method} ||= OpenRegister.record('#{register}', send(:#{symbol}), from_openregister: #{@from_openregister} )
+  #{instance_variable} ||= OpenRegister.record('#{register}', send(:#{symbol}), from_openregister: _from_openregister)
 end"
   end
 
