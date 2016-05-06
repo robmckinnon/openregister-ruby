@@ -7,12 +7,12 @@ end
 
 class OpenRegister::Register
   include Morph
-  def all_records page_size: 100
-    OpenRegister::records_for register.to_sym, from_openregister: try(:from_openregister), all: true, page_size: page_size
+  def _all_records page_size: 100
+    OpenRegister::records_for register.to_sym, from_openregister: try(:_from_openregister), all: true, page_size: page_size
   end
 
-  def records
-    OpenRegister::records_for register.to_sym, from_openregister: try(:from_openregister)
+  def _records
+    OpenRegister::records_for register.to_sym, from_openregister: try(:_from_openregister)
   end
 end
 
@@ -99,7 +99,7 @@ module OpenRegister
         end
         results
       end
-      list.each { |item| item.from_openregister = true } if from_openregister
+      list.each { |item| item._from_openregister = true } if from_openregister
       list
     end
 
