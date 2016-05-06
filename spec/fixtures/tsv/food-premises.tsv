@@ -1,2 +1,2 @@
-entry	cardinality	datatype	field	phase	register	text
-24	1	string	food-premises	alpha	food-premises	A premises which serves or processes food.
+entry-number	item-hash	entry-timestamp	field	datatype	phase	register	cardinality	text
+352	sha-256:9d844a608467ed2602909c63c37ee315280081945c7814ddf944bfe8a3b96bdc	2016-04-12T15:11:52Z	food-premises	string	alpha	food-premises	1	A premises which serves or processes food.

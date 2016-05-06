@@ -37,7 +37,7 @@ module OpenRegister
     end
 
     def record register, record, from_openregister: false
-      url = url_for "#{register}/#{record}", register, from_openregister
+      url = url_for "record/#{record}", register, from_openregister
       retrieve(url, register, from_openregister).first
     end
 
@@ -85,7 +85,7 @@ module OpenRegister
 
     def url_for path, register, from_openregister
       if from_openregister
-        "http://#{register}.openregister.org/#{path}"
+        "http://#{register}.alpha.openregister.org/#{path}"
       else
         "https://#{register}.register.gov.uk/#{path}"
       end
@@ -133,7 +133,7 @@ class OpenRegister::MorphListener
   def call klass, symbol
     return if @handling && @handling == [klass, symbol]
     @handling = [klass, symbol]
-    if !register_or_field_class?(klass, symbol) && !hash_or_serial_or_entry?(symbol) && !augmented_field?(symbol)
+    if !register_or_field_class?(klass, symbol) && !is_entry_resource_field?(symbol) && !augmented_field?(symbol)
       add_method_to_access_field_record klass, symbol
     end
   end
@@ -144,8 +144,8 @@ class OpenRegister::MorphListener
     klass.name == 'OpenRegister::Field' || (klass.name == 'OpenRegister::Register' && symbol != :fields)
   end
 
-  def hash_or_serial_or_entry? symbol
-    [:_hash, :serial_number, :entry].include? symbol
+  def is_entry_resource_field? symbol
+    [:entry_number, :entry_timestamp, :item_hash].include? symbol
   end
 
   def augmented_field? symbol

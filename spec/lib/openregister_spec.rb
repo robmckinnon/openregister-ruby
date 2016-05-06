@@ -16,14 +16,14 @@ RSpec.describe OpenRegister do
 
     [
       'https://register.register.gov.uk/records.tsv',
-      'http://register.openregister.org/records.tsv'
+      'http://register.alpha.openregister.org/records.tsv'
     ].each do |url|
       stub_tsv_request(url, './spec/fixtures/tsv/register-records.tsv')
     end
 
     [
       'https://country.register.gov.uk/records.tsv',
-      'http://country.openregister.org/records.tsv'
+      'http://country.alpha.openregister.org/records.tsv'
     ].each do |url|
       stub_tsv_request(url, './spec/fixtures/tsv/country-records-1.tsv',
         headers: { 'Link': '<?page-index=2&page-size=100>; rel="next"' })
@@ -31,25 +31,25 @@ RSpec.describe OpenRegister do
 
     [
       'https://country.register.gov.uk/records.tsv?page-index=2&page-size=100',
-      'http://country.openregister.org/records.tsv?page-index=2&page-size=100'
+      'http://country.alpha.openregister.org/records.tsv?page-index=2&page-size=100'
     ].each do |url|
       stub_tsv_request(url, './spec/fixtures/tsv/country-records-2.tsv',
         headers: { 'Link': '<?page-index=1&page-size=100>; rel="previous"' })
     end
 
-    stub_tsv_request('http://food-premises-rating.openregister.org/records.tsv',
+    stub_tsv_request('http://food-premises-rating.alpha.openregister.org/records.tsv',
       './spec/fixtures/tsv/food-premises-rating-records.tsv')
 
-    stub_tsv_request('http://field.openregister.org/field/food-premises.tsv',
+    stub_tsv_request('http://field.alpha.openregister.org/record/food-premises.tsv',
       './spec/fixtures/tsv/food-premises.tsv')
 
-    stub_tsv_request('http://food-premises.openregister.org/food-premises/759332.tsv',
+    stub_tsv_request('http://food-premises.alpha.openregister.org/record/759332.tsv',
       './spec/fixtures/tsv/food-premises-759332.tsv')
 
-    stub_tsv_request('http://company.openregister.org/company/07228130.tsv',
+    stub_tsv_request('http://company.alpha.openregister.org/record/07228130.tsv',
       './spec/fixtures/tsv/company-07228130.tsv')
 
-    stub_tsv_request('http://premises.openregister.org/premises/15662079000.tsv',
+    stub_tsv_request('http://premises.alpha.openregister.org/record/15662079000.tsv',
       './spec/fixtures/tsv/premises-15662079000.tsv')
   end
 
@@ -68,7 +68,7 @@ RSpec.describe OpenRegister do
 
   describe 'retrieve registers index from openregister.org' do
     it 'calls correct url' do
-      expect(OpenRegister).to receive(:retrieve).with('http://register.openregister.org/records', :register, true, true, 100)
+      expect(OpenRegister).to receive(:retrieve).with('http://register.alpha.openregister.org/records', :register, true, true, 100)
       OpenRegister.registers from_openregister: true
     end
 
@@ -90,9 +90,9 @@ RSpec.describe OpenRegister do
     subject { OpenRegister.registers[1] }
 
     include_examples 'has attributes', {
-      entry: '9',
+      entry_number: '3',
       fields: ['country', 'name', 'official-name', 'citizen-names', 'start-date', 'end-date'],
-      phase: 'alpha',
+      phase: 'beta',
       register: 'country',
       registry: 'foreign-commonwealth-office',
       text: 'British English-language names and descriptive terms for countries'
@@ -119,10 +119,12 @@ RSpec.describe OpenRegister do
 
   shared_examples 'has record attributes' do
     include_examples 'has attributes', {
-      entry: '201',
+      entry_number: '202',
       citizen_names: 'Gambian',
       country: 'GM',
-      name: 'Gambia,The',
+      name: 'The Gambia',
+      official_name: 'The Islamic Republic of The Gambia',
+      entry_timestamp: '2016-04-05T13:23:05Z',
       official_name: 'The Islamic Republic of The Gambia'
     }
   end
@@ -168,7 +170,7 @@ RSpec.describe OpenRegister do
 
   shared_examples 'has field attributes' do
     include_examples 'has attributes', {
-      entry: '24',
+      entry_number: '352',
       cardinality: '1',
       datatype: 'string',
       field: 'food-premises',
