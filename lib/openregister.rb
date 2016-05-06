@@ -60,7 +60,9 @@ module OpenRegister
     end
 
     def field record, from_openregister: false
-      record('field', record, from_openregister: from_openregister)
+      @fields ||= {}
+      key = "#{record}-#{from_openregister}"
+      @fields[key] ||= record('field', record, from_openregister: from_openregister)
     end
 
     private
