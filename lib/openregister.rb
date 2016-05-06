@@ -223,7 +223,7 @@ end"
     curie = send(:#{symbol}).split(':')
     register = curie.first
     field = curie.last
-    #{instance_variable} = OpenRegister.record(register, field, from_openregister: #{@from_openregister} )
+    #{instance_variable} = OpenRegister.record(register, field, from_openregister: _from_openregister)
   end
   #{instance_variable}
 end"
@@ -233,7 +233,7 @@ end"
     method = "_#{symbol}"
     instance_variable = "@#{method}"
     "def #{method}
-  #{instance_variable} ||= OpenRegister.record('#{register}', send(:#{symbol}), from_openregister: #{@from_openregister} )
+  #{instance_variable} ||= OpenRegister.record('#{register}', send(:#{symbol}), from_openregister: _from_openregister)
 end"
   end
 
