@@ -125,7 +125,6 @@ RSpec.describe OpenRegister do
       name: 'The Gambia',
       official_name: 'The Islamic Republic of The Gambia',
       entry_timestamp: '2016-04-05T13:23:05Z',
-      official_name: 'The Islamic Republic of The Gambia'
     }
   end
 
