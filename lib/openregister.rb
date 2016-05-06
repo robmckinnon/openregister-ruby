@@ -20,6 +20,24 @@ class OpenRegister::Field
   include Morph
 end
 
+module OpenRegister::Helpers
+  def is_entry_resource_field? symbol
+    [:entry_number, :entry_timestamp, :item_hash].include? symbol
+  end
+
+  def augmented_field? symbol
+    symbol[/^_/]
+  end
+
+  def cardinality_n? field
+    field.cardinality == 'n' if field && field.cardinality
+  end
+
+  def field_name symbol
+    symbol.to_s.gsub('_','-')
+  end
+end
+
 module OpenRegister
   class << self
 
@@ -140,20 +158,10 @@ class OpenRegister::MorphListener
 
   private
 
+  include OpenRegister::Helpers
+
   def register_or_field_class? klass, symbol
     klass.name == 'OpenRegister::Field' || (klass.name == 'OpenRegister::Register' && symbol != :fields)
-  end
-
-  def is_entry_resource_field? symbol
-    [:entry_number, :entry_timestamp, :item_hash].include? symbol
-  end
-
-  def augmented_field? symbol
-    symbol.to_s[/^_/]
-  end
-
-  def field_name symbol
-    symbol.to_s.gsub('_','-')
   end
 
   def field symbol
@@ -178,10 +186,6 @@ class OpenRegister::MorphListener
                n_split_method(symbol)
              end
     klass.class_eval method if method
-  end
-
-  def cardinality_n? field
-    field.cardinality == 'n' if field && field.cardinality
   end
 
   def n_split_method symbol
