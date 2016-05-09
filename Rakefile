@@ -29,10 +29,10 @@ spec = Gem::Specification.new do |s|
   s.require_paths     = ['lib']
 
   s.add_runtime_dependency 'morph', '~> 0.4.1'
-  s.add_runtime_dependency 'rest-client', '~> 0'
+  s.add_runtime_dependency 'rest-client', '~> 1'
 
-  s.add_development_dependency 'guard-rspec', '~> 0'
-  s.add_development_dependency 'webmock', '~> 0'
+  s.add_development_dependency 'guard-rspec', '~> 4'
+  s.add_development_dependency 'webmock', '~> 2'
 end
 
 # This task actually builds the gem.
