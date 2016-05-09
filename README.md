@@ -1,6 +1,20 @@
 # openregister-ruby
 A Ruby API to UK government data registers http://www.openregister.org/
 
+## Install
+
+In your Gemfile add:
+
+```rb
+gem 'openregister-ruby', git: 'https://github.com/robmckinnon/openregister-ruby.git'
+```
+
+To use:
+
+```rb
+require 'openregister'
+```
+
 ## Usage
 
 ### Retrieve list of registers
@@ -8,6 +22,8 @@ A Ruby API to UK government data registers http://www.openregister.org/
 To retrieve all registers from [register.gov.uk](https://register.register.gov.uk/records):
 
 ```rb
+require 'openregister'
+
 OpenRegister.registers
 ```
 
