@@ -14,6 +14,12 @@ class OpenRegister::Register
   def _records
     OpenRegister::records_for register.to_sym, from_openregister: try(:_from_openregister)
   end
+
+  def _fields
+    fields.map do |field|
+      OpenRegister.field field.to_sym, from_openregister: try(:_from_openregister)
+    end
+  end
 end
 
 class OpenRegister::Field

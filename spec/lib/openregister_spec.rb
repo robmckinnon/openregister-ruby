@@ -10,7 +10,7 @@ RSpec.describe OpenRegister do
   end
 
   before do
-    allow(OpenRegister).to receive(:field).and_return double(register: '', datatype: 'string', cardinality: '1')
+    allow(OpenRegister).to receive(:field).and_return double("OpenRegister::Field", register: '', datatype: 'string', cardinality: '1')
     allow(OpenRegister).to receive(:field).with('fields', from_openregister: false).
       and_return double(register: '', datatype: 'string', cardinality: 'n')
 
@@ -104,7 +104,7 @@ RSpec.describe OpenRegister do
     }
   end
 
-  describe 'retrieve all a register\'s records handling pagination' do
+  describe 'retrieve all a register\'s records handling pagination via #_all_records' do
     it 'returns records as Ruby objects' do
       records = OpenRegister.registers[1]._all_records
       expect(records).to be_an(Array)
@@ -113,12 +113,25 @@ RSpec.describe OpenRegister do
     end
   end
 
-  describe 'retrieve a register\'s records first page only' do
+  describe 'retrieve a register\'s records first page only via #_records' do
     it 'returns records as Ruby objects' do
       records = OpenRegister.registers[1]._records
       expect(records).to be_an(Array)
       records.each { |r| expect(r).to be_an(OpenRegister::Country) }
       expect(records.size).to eq(1)
+    end
+  end
+
+  describe 'retrieve a register\'s fields via #_fields' do
+    it 'returns fields as Ruby objects' do
+      register = OpenRegister.registers[1]
+      fields = register._fields
+      expect(fields).to be_an(Array)
+      expect(fields.size).to eq(6)
+      fields.each do |r|
+        expect(r).to be_a(RSpec::Mocks::Double)
+        expect(r.instance_variable_get(:@name)).to eq("OpenRegister::Field")
+      end
     end
   end
 
