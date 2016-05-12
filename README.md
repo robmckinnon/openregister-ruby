@@ -60,7 +60,7 @@ fields:
 
 ### Retrieve a specific register's records
 
-To retrieve all records from a specific register:
+To retrieve first page of records from a specific register:
 
 ```rb
 register = OpenRegister.registers[1]
@@ -82,6 +82,34 @@ country: VA
 name: Vatican City
 official_name: Vatican City State
 citizen_names: Vatican citizen
+```
+
+### Retrieve field definitions for a specific register
+
+To retrieve all field details for a specific register:
+
+```rb
+register = OpenRegister.register 'country'
+fields = register._fields
+```
+
+Each field is returned as a Ruby object:
+
+```rb
+puts fields.first.to_yaml
+```
+
+```yml
+--- !ruby/object:OpenRegister::Field
+entry_number: '8'
+item_hash: sha-256:5a110f91639ee80def2a3bc5293d1130599ca82547402cfd6786a425ffe9b419
+entry_timestamp: '2016-04-20T14:57:11Z'
+field: country
+datatype: string
+phase: beta
+register: country
+cardinality: '1'
+text: ISO 3166-2 two letter code for a country.
 ```
 
 ### Retrieve records linked from a specific record
