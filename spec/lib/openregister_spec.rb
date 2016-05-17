@@ -62,21 +62,31 @@ RSpec.describe OpenRegister do
 
     it 'calls correct url' do
       expect(OpenRegister).to receive(:retrieve).with('https://register.register.gov.uk/records', :register, false, true, 100)
-      OpenRegister.registers from_openregister: false
+      OpenRegister.registers
+    end
+
+    it 'sets _uri method on register returning uri correctly' do
+      uri = OpenRegister.registers[1]._uri
+      expect(uri).to eq('https://country.register.gov.uk/')
     end
   end
 
   describe 'retrieve registers index from openregister.org' do
-    it 'calls correct url' do
-      expect(OpenRegister).to receive(:retrieve).with('http://register.alpha.openregister.org/records', :register, true, true, 100)
-      OpenRegister.registers from_openregister: true
-    end
-
     it 'returns array of Ruby objects with from_openregister set true' do
       records = OpenRegister.registers from_openregister: true
       expect(records).to be_an(Array)
       records.each { |r| expect(r).to be_an('OpenRegister::Register'.constantize) }
       records.each { |r| expect(r._from_openregister).to be(true) }
+    end
+
+    it 'calls correct url' do
+      expect(OpenRegister).to receive(:retrieve).with('http://register.alpha.openregister.org/records', :register, true, true, 100)
+      OpenRegister.registers from_openregister: true
+    end
+
+    it 'sets _uri method on register returning uri correctly' do
+      uri = OpenRegister.registers(from_openregister: true)[1]._uri
+      expect(uri).to eq('http://country.alpha.openregister.org/')
     end
   end
 
@@ -160,9 +170,14 @@ RSpec.describe OpenRegister do
   end
 
   describe 'retrieve register by name' do
+    subject { OpenRegister.register('food-premises-rating', from_openregister: true) }
+
     it 'returns register' do
-      register = OpenRegister.register('food-premises-rating', from_openregister: true)
-      expect(register.register).to eq('food-premises-rating')
+      expect(subject.register).to eq('food-premises-rating')
+    end
+
+    it 'has _uri method returning uri correctly' do
+      expect(subject._uri).to eq('http://food-premises-rating.alpha.openregister.org/')
     end
   end
 

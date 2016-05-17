@@ -56,6 +56,7 @@ fields:
 - citizen-names
 - start-date
 - end-date
+_uri: https://country.register.gov.uk/
 ```
 
 ### Retrieve a specific register's records
