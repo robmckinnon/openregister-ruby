@@ -48,7 +48,11 @@ module OpenRegister
   class << self
 
     def registers from_openregister: false
-      records_for :register, from_openregister: from_openregister, all: true
+      registers = records_for :register, from_openregister: from_openregister, all: true
+      registers.each do |r|
+        r._uri = url_for('', r.register, from_openregister)
+      end if registers
+      registers
     end
 
     def register register, from_openregister: false
