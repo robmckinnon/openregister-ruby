@@ -8,16 +8,16 @@ end
 class OpenRegister::Register
   include Morph
   def _all_records page_size: 100
-    OpenRegister::records_for register.to_sym, try(:_base_url), all: true, page_size: page_size
+    OpenRegister::records_for register.to_sym, try(:_base_url_or_phase), all: true, page_size: page_size
   end
 
   def _records
-    OpenRegister::records_for register.to_sym, try(:_base_url)
+    OpenRegister::records_for register.to_sym, try(:_base_url_or_phase)
   end
 
   def _fields
     fields.map do |field|
-      OpenRegister.field field.to_sym, try(:_base_url)
+      OpenRegister.field field.to_sym, try(:_base_url_or_phase)
     end
   end
 end
@@ -47,60 +47,60 @@ end
 module OpenRegister
   class << self
 
-    def registers base_url=nil
-      registers = records_for :register, base_url, all: true
+    def registers base_url_or_phase=nil
+      registers = records_for :register, base_url_or_phase, all: true
       registers.each do |r|
-        r._uri = url_for('', r.register, base_url)
+        r._uri = url_for('', r.register, base_url_or_phase)
       end if registers
       registers
     end
 
-    def register register, base_url=nil
-      registers(base_url).detect{ |r| r.register == register }
+    def register register, base_url_or_phase=nil
+      registers(base_url_or_phase).detect{ |r| r.register == register }
     end
 
-    def records_for register, base_url=nil, all: false, page_size: 100
-      url = url_for('records', register, base_url)
-      retrieve url, register, base_url, all, page_size
+    def records_for register, base_url_or_phase=nil, all: false, page_size: 100
+      url = url_for('records', register, base_url_or_phase)
+      retrieve url, register, base_url_or_phase, all, page_size
     end
 
-    def record register, record, base_url=nil
-      url = url_for "record/#{record}", register, base_url
-      retrieve(url, register, base_url).first
+    def record register, record, base_url_or_phase=nil
+      url = url_for "record/#{record}", register, base_url_or_phase
+      retrieve(url, register, base_url_or_phase).first
     end
 
-    def field record, base_url=nil
+    def field record, base_url_or_phase=nil
       @fields ||= {}
-      key = "#{record}-#{base_url}"
-      @fields[key] ||= record('field', record, base_url)
+      key = "#{record}-#{base_url_or_phase}"
+      @fields[key] ||= record('field', record, base_url_or_phase)
     end
 
     private
 
     include OpenRegister::Helpers
 
-    def set_morph_listener base_url
+    def set_morph_listener base_url_or_phase
       @listeners ||= {}
-      @listeners[base_url] ||= OpenRegister::MorphListener.new base_url
-      Morph.register_listener @listeners[base_url]
+      @listeners[base_url_or_phase] ||= OpenRegister::MorphListener.new base_url_or_phase
+      Morph.register_listener @listeners[base_url_or_phase]
       @morph_listener_set = true
     end
 
-    def unset_morph_listener base_url
-      Morph.unregister_listener @listeners[base_url]
+    def unset_morph_listener base_url_or_phase
+      Morph.unregister_listener @listeners[base_url_or_phase]
       @morph_listener_set = false
     end
 
-    def augment_register_fields base_url, &block
+    def augment_register_fields base_url_or_phase, &block
       already_set = (@morph_listener_set || false)
-      set_morph_listener(base_url) unless already_set
+      set_morph_listener(base_url_or_phase) unless already_set
       list = yield
-      unset_morph_listener(base_url) unless already_set
+      unset_morph_listener(base_url_or_phase) unless already_set
       list
     end
 
-    def retrieve url, type, base_url, all=false, page_size=100
-      list = augment_register_fields(base_url) do
+    def retrieve url, type, base_url_or_phase, all=false, page_size=100
+      list = augment_register_fields(base_url_or_phase) do
         url = "#{url}.tsv"
         url = "#{url}?page-index=1&page-size=#{page_size}" if page_size != 100
         results = []
@@ -111,19 +111,19 @@ module OpenRegister
         end
         results
       end
-      list.each { |item| item._base_url = base_url } if base_url
+      list.each { |item| item._base_url_or_phase = base_url_or_phase } if base_url_or_phase
       list.each { |item| convert_n_cardinality_data! item }
       list
     end
 
     def convert_n_cardinality_data! item
       return if item.is_a?(OpenRegister::Field)
-      base_url = item.try(:_base_url)
+      base_url_or_phase = item.try(:_base_url_or_phase)
       attributes = item.class.morph_attributes
       cardinality_n_fields = attributes.select do |symbol|
         !is_entry_resource_field?(symbol) &&
           !augmented_field?(symbol) &&
-          (field = field(field_name(symbol), base_url)) &&
+          (field = field(field_name(symbol), base_url_or_phase)) &&
           cardinality_n?(field)
       end
       cardinality_n_fields.each do |symbol|
@@ -131,9 +131,14 @@ module OpenRegister
       end
     end
 
-    def url_for path, register, base_url
-      if base_url
-        host = base_url.sub('register', register.to_s).chomp('/')
+    def url_for path, register, base_url_or_phase
+      if base_url_or_phase
+        host = case base_url_or_phase
+               when Symbol
+                 "http://#{register}.#{base_url_or_phase}.openregister.org"
+               when String
+                 base_url_or_phase.sub('register', register.to_s).chomp('/')
+               end
         "#{host}/#{path}"
       else
         "https://#{register}.register.gov.uk/#{path}"
@@ -175,8 +180,8 @@ end
 
 class OpenRegister::MorphListener
 
-  def initialize base_url
-    @base_url = base_url || nil
+  def initialize base_url_or_phase
+    @base_url_or_phase = base_url_or_phase || nil
   end
 
   def call klass, symbol
@@ -196,7 +201,7 @@ class OpenRegister::MorphListener
   end
 
   def field symbol
-    OpenRegister::field field_name(symbol), @base_url
+    OpenRegister::field field_name(symbol), @base_url_or_phase
   end
 
   def datatype_curie? field
@@ -234,7 +239,7 @@ end"
     curie = send(:#{symbol}).split(':')
     register = curie.first
     field = curie.last
-    #{instance_variable} = OpenRegister.record(register, field, _base_url)
+    #{instance_variable} = OpenRegister.record(register, field, _base_url_or_phase)
   end
   #{instance_variable}
 end"
@@ -244,7 +249,7 @@ end"
     method = "_#{symbol}"
     instance_variable = "@#{method}"
     "def #{method}
-  #{instance_variable} ||= OpenRegister.record('#{register}', send(:#{symbol}), _base_url)
+  #{instance_variable} ||= OpenRegister.record('#{register}', send(:#{symbol}), _base_url_or_phase)
 end"
   end
 

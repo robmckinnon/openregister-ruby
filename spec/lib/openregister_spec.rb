@@ -74,12 +74,12 @@ RSpec.describe OpenRegister do
     end
   end
 
-  describe 'retrieve registers index from openregister.org' do
+  describe 'retrieve registers index when passed base_url' do
     it 'returns array of Ruby objects with from_openregister set true' do
       records = OpenRegister.registers 'http://register.alpha.openregister.org/'
       expect(records).to be_an(Array)
       records.each { |r| expect(r).to be_an('OpenRegister::Register'.constantize) }
-      records.each { |r| expect(r._base_url).to eq('http://register.alpha.openregister.org/') }
+      records.each { |r| expect(r._base_url_or_phase).to eq('http://register.alpha.openregister.org/') }
     end
 
     it 'calls correct url' do
@@ -91,6 +91,27 @@ RSpec.describe OpenRegister do
 
     it 'sets _uri method on register returning uri correctly' do
       uri = OpenRegister.registers('http://register.alpha.openregister.org/')[1]._uri
+      expect(uri).to eq('http://country.alpha.openregister.org/')
+    end
+  end
+
+  describe 'retrieve registers index when passed phase' do
+    it 'returns array of Ruby objects with from_openregister set true' do
+      records = OpenRegister.registers :alpha
+      expect(records).to be_an(Array)
+      records.each { |r| expect(r).to be_an('OpenRegister::Register'.constantize) }
+      records.each { |r| expect(r._base_url_or_phase).to eq(:alpha) }
+    end
+
+    it 'calls correct url' do
+      expect(OpenRegister).to receive(:retrieve).with(
+        'http://register.alpha.openregister.org/records', :register,
+        :alpha, true, 100)
+      OpenRegister.registers :alpha
+    end
+
+    it 'sets _uri method on register returning uri correctly' do
+      uri = OpenRegister.registers(:alpha)[1]._uri
       expect(uri).to eq('http://country.alpha.openregister.org/')
     end
   end
@@ -167,11 +188,11 @@ RSpec.describe OpenRegister do
     include_examples 'has record attributes'
   end
 
-  describe 'retrieved register record from openregister.org' do
+  describe 'retrieved register record when passed base_url' do
     subject { OpenRegister.registers('http://register.alpha.openregister.org/')[1]._all_records[0] }
 
     include_examples 'has record attributes'
-    include_examples 'has attributes', { _base_url: 'http://register.alpha.openregister.org/' }
+    include_examples 'has attributes', { _base_url_or_phase: 'http://register.alpha.openregister.org/' }
   end
 
   describe 'retrieve register by name' do
@@ -188,16 +209,16 @@ RSpec.describe OpenRegister do
 
   describe 'retrieve a record linked to from another record' do
     it 'returns linked record from another register' do
-      expect(OpenRegister).to receive(:field).with('food-premises', 'http://register.alpha.openregister.org/').
+      expect(OpenRegister).to receive(:field).with('food-premises', :alpha).
         and_return double(register: 'food-premises', datatype: 'string', cardinality: '1')
 
-      expect(OpenRegister).to receive(:field).with('business', 'http://register.alpha.openregister.org/').
+      expect(OpenRegister).to receive(:field).with('business', :alpha).
         and_return double(register: 'company', datatype: 'curie', cardinality: '1')
 
-      expect(OpenRegister).to receive(:field).with('premises', 'http://register.alpha.openregister.org/').
+      expect(OpenRegister).to receive(:field).with('premises', :alpha).
         and_return double(register: 'premises', datatype: 'string', cardinality: '1')
 
-      register = OpenRegister.register('food-premises-rating', 'http://register.alpha.openregister.org/')
+      register = OpenRegister.register('food-premises-rating', :alpha)
       record = register._records.first
       expect(record._food_premises._business.class.name).to eq('OpenRegister::Company')
       expect(record._food_premises._premises.class.name).to eq('OpenRegister::Premises')

@@ -27,7 +27,15 @@ require 'openregister'
 OpenRegister.registers
 ```
 
-To retrieve all registers from [alpha.openregister.org](http://register.alpha.openregister.org/records):
+To retrieve all registers for a earlier register phase, pass the phase as a symbol. For example to retrieve all
+registers from [alpha.openregister.org](http://register.alpha.openregister.org/records):
+
+```rb
+OpenRegister.registers :alpha
+```
+
+Or to retrieve all registers from a specific url pass the base_url as a string. For example to retrieve all registers
+from [alpha.openregister.org](http://register.alpha.openregister.org/records), you can also call:
 
 ```rb
 OpenRegister.registers 'http://register.alpha.openregister.org/'
@@ -118,7 +126,7 @@ text: ISO 3166-2 two letter code for a country.
 Retrieve a food premises rating:
 
 ```rb
-register = OpenRegister.register 'food-premises-rating', 'http://register.alpha.openregister.org/'
+register = OpenRegister.register 'food-premises-rating', :alpha
 rating = register._records.first
 ```
 
@@ -135,7 +143,7 @@ food_premises_rating_structural_score: '10'
 food_premises_rating_confidence_in_management_score: '5'
 start_date: '2014-04-09'
 inspector: local-authority:506
-_base_url: http://register.alpha.openregister.org/
+_base_url_or_phase: :alpha
 ```
 
 The record objects have methods prefixed with '_'
@@ -157,7 +165,7 @@ entry_timestamp: '2016-03-31T12:21:09Z'
 local_authority: '506'
 name: Camden
 website: https://www.camden.gov.uk
-_base_url: http://register.alpha.openregister.org/
+_base_url_or_phase: :alpha
 ```
 
 Retrieve the food premises from the rating:
@@ -176,7 +184,7 @@ name: Byron
 business: company:07228130
 local_authority: '506'
 premises: '15662079000'
-_base_url: http://register.alpha.openregister.org/
+_base_url_or_phase: :alpha
 ```
 
 Retrieve the business from the food premises:
@@ -195,7 +203,7 @@ name: BYRON HAMBURGERS LIMITED
 registered_office: '10033530330'
 industry: '56101'
 start_date: '2010-04-20'
-_base_url: http://register.alpha.openregister.org/
+_base_url_or_phase: :alpha
 ```
 
 Retrieve the industry from the business:
@@ -211,5 +219,5 @@ item_hash: sha-256:285a2fbb621fd898ecaa76bab487c2ec103887a4130500be296d5dca5248e
 entry_timestamp: '2016-03-31T13:44:24Z'
 industry: '56101'
 name: 'Licensed restaurants '
-_base_url: http://register.alpha.openregister.org/
+_base_url_or_phase: :alpha
 ```
