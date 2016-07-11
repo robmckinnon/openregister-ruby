@@ -1,6 +1,8 @@
 # openregister-ruby
 A Ruby API to UK government data registers http://www.openregister.org/
 
+[![Build Status](https://travis-ci.org/robmckinnon/openregister-ruby.svg?branch=master)](https://travis-ci.org/robmckinnon/openregister-ruby)
+
 ## Install
 
 In your Gemfile add:
