@@ -10,9 +10,12 @@ RSpec.describe OpenRegister do
   end
 
   before do
-    allow(OpenRegister).to receive(:field).and_return double("OpenRegister::Field", register: '', datatype: 'string', cardinality: '1')
-    allow(OpenRegister).to receive(:field).with('fields', from_openregister: false).
-      and_return double(register: '', datatype: 'string', cardinality: 'n')
+    allow(OpenRegister).to receive(:field).and_return double("OpenRegister::Field",
+      register: '', datatype: 'string', cardinality: '1')
+
+    allow(OpenRegister).to receive(:field).with('fields', anything).
+      and_return double("OpenRegister::Field",
+        register: '', datatype: 'string', cardinality: 'n')
 
     [
       'https://register.register.gov.uk/records.tsv',
@@ -61,7 +64,7 @@ RSpec.describe OpenRegister do
     end
 
     it 'calls correct url' do
-      expect(OpenRegister).to receive(:retrieve).with('https://register.register.gov.uk/records', :register, false, true, 100)
+      expect(OpenRegister).to receive(:retrieve).with('https://register.register.gov.uk/records', :register, nil, true, 100)
       OpenRegister.registers
     end
 
@@ -73,19 +76,21 @@ RSpec.describe OpenRegister do
 
   describe 'retrieve registers index from openregister.org' do
     it 'returns array of Ruby objects with from_openregister set true' do
-      records = OpenRegister.registers from_openregister: true
+      records = OpenRegister.registers 'http://register.alpha.openregister.org/'
       expect(records).to be_an(Array)
       records.each { |r| expect(r).to be_an('OpenRegister::Register'.constantize) }
-      records.each { |r| expect(r._from_openregister).to be(true) }
+      records.each { |r| expect(r._base_url).to eq('http://register.alpha.openregister.org/') }
     end
 
     it 'calls correct url' do
-      expect(OpenRegister).to receive(:retrieve).with('http://register.alpha.openregister.org/records', :register, true, true, 100)
-      OpenRegister.registers from_openregister: true
+      expect(OpenRegister).to receive(:retrieve).with(
+        'http://register.alpha.openregister.org/records', :register,
+        'http://register.alpha.openregister.org/', true, 100)
+      OpenRegister.registers 'http://register.alpha.openregister.org/'
     end
 
     it 'sets _uri method on register returning uri correctly' do
-      uri = OpenRegister.registers(from_openregister: true)[1]._uri
+      uri = OpenRegister.registers('http://register.alpha.openregister.org/')[1]._uri
       expect(uri).to eq('http://country.alpha.openregister.org/')
     end
   end
@@ -163,14 +168,14 @@ RSpec.describe OpenRegister do
   end
 
   describe 'retrieved register record from openregister.org' do
-    subject { OpenRegister.registers(from_openregister: true)[1]._all_records[0] }
+    subject { OpenRegister.registers('http://register.alpha.openregister.org/')[1]._all_records[0] }
 
     include_examples 'has record attributes'
-    include_examples 'has attributes', { _from_openregister: true }
+    include_examples 'has attributes', { _base_url: 'http://register.alpha.openregister.org/' }
   end
 
   describe 'retrieve register by name' do
-    subject { OpenRegister.register('food-premises-rating', from_openregister: true) }
+    subject { OpenRegister.register('food-premises-rating', 'http://register.alpha.openregister.org/') }
 
     it 'returns register' do
       expect(subject.register).to eq('food-premises-rating')
@@ -183,16 +188,16 @@ RSpec.describe OpenRegister do
 
   describe 'retrieve a record linked to from another record' do
     it 'returns linked record from another register' do
-      expect(OpenRegister).to receive(:field).with('food-premises', from_openregister: true).
+      expect(OpenRegister).to receive(:field).with('food-premises', 'http://register.alpha.openregister.org/').
         and_return double(register: 'food-premises', datatype: 'string', cardinality: '1')
 
-      expect(OpenRegister).to receive(:field).with('business', from_openregister: true).
+      expect(OpenRegister).to receive(:field).with('business', 'http://register.alpha.openregister.org/').
         and_return double(register: 'company', datatype: 'curie', cardinality: '1')
 
-      expect(OpenRegister).to receive(:field).with('premises', from_openregister: true).
+      expect(OpenRegister).to receive(:field).with('premises', 'http://register.alpha.openregister.org/').
         and_return double(register: 'premises', datatype: 'string', cardinality: '1')
 
-      register = OpenRegister.register('food-premises-rating', from_openregister: true)
+      register = OpenRegister.register('food-premises-rating', 'http://register.alpha.openregister.org/')
       record = register._records.first
       expect(record._food_premises._business.class.name).to eq('OpenRegister::Company')
       expect(record._food_premises._premises.class.name).to eq('OpenRegister::Premises')
@@ -213,7 +218,7 @@ RSpec.describe OpenRegister do
   end
 
   describe 'retrieve specific record from a given register' do
-    subject { OpenRegister.record('field', 'food-premises', from_openregister: true) }
+    subject { OpenRegister.record('field', 'food-premises', 'http://register.alpha.openregister.org/') }
     include_examples 'has field attributes'
   end
 end

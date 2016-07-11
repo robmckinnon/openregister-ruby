@@ -30,7 +30,7 @@ OpenRegister.registers
 To retrieve all registers from [alpha.openregister.org](http://register.alpha.openregister.org/records):
 
 ```rb
-OpenRegister.registers from_openregister: true
+OpenRegister.registers 'http://register.alpha.openregister.org/'
 ```
 
 Each record is a Ruby object:
@@ -118,7 +118,7 @@ text: ISO 3166-2 two letter code for a country.
 Retrieve a food premises rating:
 
 ```rb
-register = OpenRegister.register 'food-premises-rating', from_openregister: true
+register = OpenRegister.register 'food-premises-rating', 'http://register.alpha.openregister.org/'
 rating = register._records.first
 ```
 
@@ -135,7 +135,7 @@ food_premises_rating_structural_score: '10'
 food_premises_rating_confidence_in_management_score: '5'
 start_date: '2014-04-09'
 inspector: local-authority:506
-_from_openregister: true
+_base_url: http://register.alpha.openregister.org/
 ```
 
 The record objects have methods prefixed with '_'
@@ -157,7 +157,7 @@ entry_timestamp: '2016-03-31T12:21:09Z'
 local_authority: '506'
 name: Camden
 website: https://www.camden.gov.uk
-_from_openregister: true
+_base_url: http://register.alpha.openregister.org/
 ```
 
 Retrieve the food premises from the rating:
@@ -176,7 +176,7 @@ name: Byron
 business: company:07228130
 local_authority: '506'
 premises: '15662079000'
-_from_openregister: true
+_base_url: http://register.alpha.openregister.org/
 ```
 
 Retrieve the business from the food premises:
@@ -195,7 +195,7 @@ name: BYRON HAMBURGERS LIMITED
 registered_office: '10033530330'
 industry: '56101'
 start_date: '2010-04-20'
-_from_openregister: true
+_base_url: http://register.alpha.openregister.org/
 ```
 
 Retrieve the industry from the business:
@@ -211,5 +211,5 @@ item_hash: sha-256:285a2fbb621fd898ecaa76bab487c2ec103887a4130500be296d5dca5248e
 entry_timestamp: '2016-03-31T13:44:24Z'
 industry: '56101'
 name: 'Licensed restaurants '
-_from_openregister: true
+_base_url: http://register.alpha.openregister.org/
 ```
