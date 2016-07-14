@@ -111,9 +111,9 @@ module OpenRegister
       end
     end
 
-    def retrieve url, type, base_url_or_phase, all=false, page_size=100
+    def retrieve uri, type, base_url_or_phase, all=false, page_size=100
       list = augment_register_fields(base_url_or_phase) do
-        url = "#{url}.tsv"
+        url = "#{uri}.tsv"
         url = "#{url}?page-index=1&page-size=#{page_size}" if page_size != 100
         results = []
         response_list(url, all) do |tsv|
@@ -125,6 +125,7 @@ module OpenRegister
         results
       end
       list.each { |item| item._base_url_or_phase = base_url_or_phase } if base_url_or_phase
+      list.each { |item| item._uri = uri if uri[/\/record\//] }
       list.each { |item| convert_n_cardinality_data! item }
       list
     end
