@@ -25,6 +25,18 @@ RSpec.describe OpenRegister do
     end
 
     [
+      'https://register.register.gov.uk/record/register.tsv',
+    ].each do |url|
+      stub_tsv_request(url, './spec/fixtures/tsv/register-register.tsv')
+    end
+
+    [
+      'http://register.alpha.openregister.org/record/food-premises.tsv'
+    ].each do |url|
+      stub_tsv_request(url, './spec/fixtures/tsv/register-food-premises.tsv')
+    end
+
+    [
       'https://country.register.gov.uk/records.tsv',
       'http://country.alpha.openregister.org/records.tsv'
     ].each do |url|
@@ -239,7 +251,19 @@ RSpec.describe OpenRegister do
   end
 
   describe 'retrieve specific record from a given register' do
-    subject { OpenRegister.record('field', 'food-premises', 'http://register.alpha.openregister.org/') }
-    include_examples 'has field attributes'
+    let(:register) { 'food-premises' }
+    let(:record) { '759332' }
+
+    subject { OpenRegister.record(register, record, 'http://register.alpha.openregister.org/') }
+
+    it 'returns register from class method' do
+      expect(subject.class.register).to eq('food-premises')
+    end
+
+    it 'returns register object from class method' do
+      register = subject.class._register(:alpha)
+      expect(register.class.name).to eq('OpenRegister::Register')
+      expect(register.register).to eq('food-premises')
+    end
   end
 end
