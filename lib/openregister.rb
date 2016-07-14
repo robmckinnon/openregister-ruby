@@ -236,27 +236,39 @@ class OpenRegister::MorphListener
 
   def add_method_to_access_field_record klass, symbol
     field = field(symbol)
-    method = if datatype_curie? field
+    methods = if datatype_curie? field
                curie_retrieve_method(symbol)
              elsif cardinality_n? field
-               n_split_method(symbol)
+               n_split_methods(symbol, field)
              elsif register = register_for_field(field)
                retrieve_method(symbol, register)
              end
-    klass.class_eval method if method
+    methods.each {|method| klass.class_eval method} if methods
   end
 
-  def n_split_method symbol
-    "def #{symbol}
+  def n_split_methods symbol, field
+    methods = ["def #{symbol}
   @#{symbol} = @#{symbol}.split(';') if @#{symbol} && !@#{symbol}.is_a?(Array)
   @#{symbol}
+end"]
+    if register = register_for_field(field)
+      method = "_#{symbol}"
+      instance_variable = "@#{method}"
+      methods << "
+def #{method}
+  unless #{instance_variable}
+    #{instance_variable} = #{symbol}.map {|code| OpenRegister.record('#{field.register}', code, _base_url_or_phase) }
+  end
+  #{instance_variable}
 end"
+    end
+    methods
   end
 
   def curie_retrieve_method symbol
     method = "_#{symbol}"
     instance_variable = "@#{method}"
-    "def #{method}
+    ["def #{method}
   unless #{instance_variable}
     curie = send(:#{symbol}).split(':')
     register = curie.first
@@ -264,15 +276,15 @@ end"
     #{instance_variable} = OpenRegister.record(register, field, _base_url_or_phase)
   end
   #{instance_variable}
-end"
+end"]
   end
 
   def retrieve_method symbol, register
     method = "_#{symbol}"
     instance_variable = "@#{method}"
-    "def #{method}
+    ["def #{method}
   #{instance_variable} ||= OpenRegister.record('#{register}', send(:#{symbol}), _base_url_or_phase)
-end"
+end"]
   end
 
 end
