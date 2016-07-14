@@ -296,6 +296,10 @@ RSpec.describe OpenRegister do
       food_premises_types: [],
     }
 
+    it 'returns its uri' do
+      expect(subject._uri).to eq('http://food-premises.alpha.openregister.org/record/759332')
+    end
+
     it 'returns register from class method' do
       expect(subject.class.register).to eq('food-premises')
     end
