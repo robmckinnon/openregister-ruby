@@ -17,11 +17,52 @@ RSpec.describe OpenRegister do
       and_return double("OpenRegister::Field",
         register: '', datatype: 'string', cardinality: 'n')
 
+    allow(OpenRegister).to receive(:field).with('food-premises-types', anything).
+      and_return double("OpenRegister::Field",
+        register: '', datatype: 'string', cardinality: 'n')
+
     [
       'https://register.register.gov.uk/records.tsv',
       'http://register.alpha.openregister.org/records.tsv'
     ].each do |url|
       stub_tsv_request(url, './spec/fixtures/tsv/register-records.tsv')
+    end
+
+    [
+      'https://register.register.gov.uk/record/register.tsv',
+    ].each do |url|
+      stub_tsv_request(url, './spec/fixtures/tsv/register-register.tsv')
+    end
+
+    [
+      'https://register.register.gov.uk/record/country.tsv',
+      'http://register.alpha.openregister.org/record/country.tsv'
+    ].each do |url|
+      stub_tsv_request(url, './spec/fixtures/tsv/register-country.tsv')
+    end
+
+    [
+      'http://register.alpha.openregister.org/record/food-premises-rating.tsv'
+    ].each do |url|
+      stub_tsv_request(url, './spec/fixtures/tsv/register-food-premises-rating.tsv')
+    end
+
+    [
+      'http://register.alpha.openregister.org/record/company.tsv'
+    ].each do |url|
+      stub_tsv_request(url, './spec/fixtures/tsv/register-company.tsv')
+    end
+
+    [
+      'http://register.alpha.openregister.org/record/premises.tsv'
+    ].each do |url|
+      stub_tsv_request(url, './spec/fixtures/tsv/register-premises.tsv')
+    end
+
+    [
+      'http://register.alpha.openregister.org/record/food-premises.tsv'
+    ].each do |url|
+      stub_tsv_request(url, './spec/fixtures/tsv/register-food-premises.tsv')
     end
 
     [
@@ -239,7 +280,30 @@ RSpec.describe OpenRegister do
   end
 
   describe 'retrieve specific record from a given register' do
-    subject { OpenRegister.record('field', 'food-premises', 'http://register.alpha.openregister.org/') }
-    include_examples 'has field attributes'
+    let(:register) { 'food-premises' }
+    let(:record) { '759332' }
+
+    subject { OpenRegister.record(register, record, 'http://register.alpha.openregister.org/') }
+
+    include_examples 'has attributes', {
+      business: "company:07228130",
+      food_premises: "759332",
+      local_authority: "506",
+      name: "Byron",
+      premises: "15662079000",
+      end_date: nil,
+      start_date: nil,
+      food_premises_types: [],
+    }
+
+    it 'returns register from class method' do
+      expect(subject.class.register).to eq('food-premises')
+    end
+
+    it 'returns register object from class method' do
+      register = subject.class._register(:alpha)
+      expect(register.class.name).to eq('OpenRegister::Register')
+      expect(register.register).to eq('food-premises')
+    end
   end
 end

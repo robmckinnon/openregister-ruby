@@ -99,6 +99,18 @@ module OpenRegister
       list
     end
 
+    def ensure_all_field_methods_set item, base_url_or_phase
+      if item && item.class.register != 'register' && item.class.register != 'field'
+        item.class._register(base_url_or_phase).fields.each do |field|
+          method = field.gsub('-','_').to_sym
+          unless item.respond_to?(method)
+            item.send("#{method}=", 'x') # hack to create accessor method
+            item.send("#{method}=", '') # reset value back to blank
+          end
+        end
+      end
+    end
+
     def retrieve url, type, base_url_or_phase, all=false, page_size=100
       list = augment_register_fields(base_url_or_phase) do
         url = "#{url}.tsv"
@@ -106,6 +118,7 @@ module OpenRegister
         results = []
         response_list(url, all) do |tsv|
           items = Morph.from_tsv(tsv, type, OpenRegister)
+          ensure_all_field_methods_set items.first, base_url_or_phase
           items.each {|item| results.push item }
           nil
         end
@@ -187,6 +200,8 @@ class OpenRegister::MorphListener
   def call klass, symbol
     return if @handling && @handling == [klass, symbol]
     @handling = [klass, symbol]
+    add_register_accessor! klass unless klass.respond_to? :register
+
     if !register_or_field_class?(klass, symbol) && !is_entry_resource_field?(symbol) && !augmented_field?(symbol)
       add_method_to_access_field_record klass, symbol
     end
@@ -196,8 +211,14 @@ class OpenRegister::MorphListener
 
   include OpenRegister::Helpers
 
+  def add_register_accessor! klass
+    register_name = klass.name.sub('OpenRegister::','').gsub(/([a-z])([A-Z])/, '\1-\2').downcase
+    klass.class_eval("def self.register; '#{register_name}'; end")
+    klass.class_eval("def self._register(base_url_or_phase); OpenRegister.record('register', register, base_url_or_phase); end")
+  end
+
   def register_or_field_class? klass, symbol
-    klass.name == 'OpenRegister::Field' || (klass.name == 'OpenRegister::Register' && symbol != :fields)
+    klass.register == 'field' || (klass.name == 'register' && symbol != :fields)
   end
 
   def field symbol
