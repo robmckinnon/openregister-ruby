@@ -1,0 +1,2 @@
+entry-number	entry-timestamp	item-hash	register	text	registry	phase	copyright	fields
+96	2016-04-12T15:12:46Z	sha-256:75eb4b008d76bbc3ca0fe6521af31cf98a78e87880c19d2cb759db9be9ad9b20	food-premises-rating	Food hygiene inspection ratings	food-standards-agency	alpha		food-premises-rating;food-premises;food-premises-rating-value;food-premises-rating-hygiene-score;food-premises-rating-structural-score;food-premises-rating-confidence-in-management-score;local-authority;food-premises-rating-reply;start-date;inspector;end-date
