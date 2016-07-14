@@ -19,7 +19,7 @@ RSpec.describe OpenRegister do
 
     allow(OpenRegister).to receive(:field).with('food-premises-types', anything).
       and_return double("OpenRegister::Field",
-        register: '', datatype: 'string', cardinality: 'n')
+        register: 'food-premises-type', datatype: 'string', cardinality: 'n')
 
     [
       'https://register.register.gov.uk/records.tsv',
@@ -65,6 +65,9 @@ RSpec.describe OpenRegister do
       stub_tsv_request(url, './spec/fixtures/tsv/register-food-premises.tsv')
     end
 
+    stub_tsv_request('http://register.alpha.openregister.org/record/food-premises-type.tsv',
+      './spec/fixtures/tsv/register-food-premises-type.tsv')
+
     [
       'https://country.register.gov.uk/records.tsv',
       'http://country.alpha.openregister.org/records.tsv'
@@ -95,6 +98,9 @@ RSpec.describe OpenRegister do
 
     stub_tsv_request('http://premises.alpha.openregister.org/record/15662079000.tsv',
       './spec/fixtures/tsv/premises-15662079000.tsv')
+
+    stub_tsv_request('http://food-premises-type.alpha.openregister.org/record/Restaurant.tsv',
+      './spec/fixtures/tsv/food-premises-type-restaurant.tsv')
   end
 
   describe 'retrieve registers index' do
@@ -293,7 +299,7 @@ RSpec.describe OpenRegister do
       premises: "15662079000",
       end_date: nil,
       start_date: nil,
-      food_premises_types: [],
+      food_premises_types: ["Restaurant"],
     }
 
     it 'returns its uri' do
@@ -302,6 +308,13 @@ RSpec.describe OpenRegister do
 
     it 'returns register from class method' do
       expect(subject.class.register).to eq('food-premises')
+    end
+
+    it 'returns linked record list from another register' do
+      list = subject._food_premises_types
+      expect(list).to be_a(Array)
+      expect(list.first.class.name).to eq('OpenRegister::FoodPremisesType')
+      expect(list.first.name).to eq('Restaurant')
     end
 
     it 'returns register object from class method' do
