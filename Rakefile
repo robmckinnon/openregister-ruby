@@ -28,7 +28,7 @@ spec = Gem::Specification.new do |s|
   s.files             = %w(Gemfile LICENSE README.md) + Dir.glob('{lib}/**/*')
   s.require_paths     = ['lib']
 
-  s.add_runtime_dependency 'morph', '~> 0.4.1'
+  s.add_runtime_dependency 'morph', '~> 0.5.0'
   s.add_runtime_dependency 'rest-client', '~> 1'
 
   s.add_development_dependency 'guard-rspec', '~> 4'
