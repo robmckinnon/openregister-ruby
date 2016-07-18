@@ -49,18 +49,18 @@ module OpenRegister
 
     def registers base_url_or_phase=nil
       registers = records_for :register, base_url_or_phase, all: true
-      registers.each do |r|
-        r._uri = url_for('', r.register, base_url_or_phase)
-      end if registers
+      registers.each { |register| set_register_uri! register, base_url_or_phase } if registers
       registers
     end
 
-    def register register, base_url_or_phase=nil
-      registers(base_url_or_phase).detect{ |r| r.register == register }
+    def register register_code, base_url_or_phase=nil
+      register = record :register, register_code, base_url_or_phase
+      set_register_uri! register, base_url_or_phase
+      register
     end
 
     def records_for register, base_url_or_phase=nil, all: false, page_size: 100
-      url = url_for('records', register, base_url_or_phase)
+      url = url_for :records, register, base_url_or_phase
       retrieve url, register, base_url_or_phase, all, page_size
     end
 
@@ -72,12 +72,16 @@ module OpenRegister
     def field record, base_url_or_phase=nil
       @fields ||= {}
       key = "#{record}-#{base_url_or_phase}"
-      @fields[key] ||= record('field', record, base_url_or_phase)
+      @fields[key] ||= record(:field, record, base_url_or_phase)
     end
 
     private
 
     include OpenRegister::Helpers
+
+    def set_register_uri! register, base_url_or_phase
+      register._uri = url_for nil, register.register, base_url_or_phase
+    end
 
     def set_morph_listener base_url_or_phase
       @listeners ||= {}
@@ -202,9 +206,9 @@ class OpenRegister::MorphListener
   def add_register_accessor! klass
     register_name = klass.name.sub('OpenRegister::','').gsub(/([a-z])([A-Z])/, '\1-\2').downcase
     klass.class_eval("def self.register; '#{register_name}'; end")
-    klass.class_eval("def self._register(base_url_or_phase); OpenRegister.record('register', register, base_url_or_phase); end")
+    klass.class_eval("def self._register(base_url_or_phase); OpenRegister.register(register, base_url_or_phase); end")
     klass.class_eval("def _register; self.class._register(_base_url_or_phase); end")
-    klass.class_eval("def _register_fields; self.class._register(_base_url_or_phase)._fields; end")
+    klass.class_eval("def _register_fields; self._register._fields; end")
   end
 
   def register_or_field_class? klass, symbol
