@@ -324,5 +324,21 @@ RSpec.describe OpenRegister do
       expect(register.class.name).to eq('OpenRegister::Register')
       expect(register.register).to eq('food-premises')
     end
+
+    it 'returns register object from instance method' do
+      register = subject._register
+      expect(register.class.name).to eq('OpenRegister::Register')
+      expect(register.register).to eq('food-premises')
+    end
+
+    it 'returns register field objects from instance method' do
+      fields = subject._register_fields
+      expect(fields).to be_an(Array)
+      expect(fields.size).to eq(8)
+      fields.each do |r|
+        expect(r).to be_a(RSpec::Mocks::Double)
+        expect(r.instance_variable_get(:@name)).to eq("OpenRegister::Field")
+      end
+    end
   end
 end

@@ -203,6 +203,8 @@ class OpenRegister::MorphListener
     register_name = klass.name.sub('OpenRegister::','').gsub(/([a-z])([A-Z])/, '\1-\2').downcase
     klass.class_eval("def self.register; '#{register_name}'; end")
     klass.class_eval("def self._register(base_url_or_phase); OpenRegister.record('register', register, base_url_or_phase); end")
+    klass.class_eval("def _register; self.class._register(_base_url_or_phase); end")
+    klass.class_eval("def _register_fields; self.class._register(_base_url_or_phase)._fields; end")
   end
 
   def register_or_field_class? klass, symbol
