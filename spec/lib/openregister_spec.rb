@@ -281,7 +281,9 @@ RSpec.describe OpenRegister do
       field: 'food-premises',
       phase: 'alpha',
       register: 'food-premises',
-      text: 'A premises which serves or processes food.'
+      text: 'A premises which serves or processes food.',
+      start_date: nil,
+      end_date: nil,
     }
   end
 
