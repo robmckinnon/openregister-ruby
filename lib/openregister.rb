@@ -99,18 +99,6 @@ module OpenRegister
       list
     end
 
-    def ensure_all_field_methods_set item, base_url_or_phase
-      if item && item.class.register != 'register' && item.class.register != 'field'
-        item.class._register(base_url_or_phase).fields.each do |field|
-          method = field.gsub('-','_').to_sym
-          unless item.respond_to?(method)
-            item.send("#{method}=", 'x') # hack to create accessor method
-            item.send("#{method}=", '') # reset value back to blank
-          end
-        end
-      end
-    end
-
     def retrieve uri, type, base_url_or_phase, all=false, page_size=100
       list = augment_register_fields(base_url_or_phase) do
         url = "#{uri}.tsv"
@@ -118,7 +106,6 @@ module OpenRegister
         results = []
         response_list(url, all) do |tsv|
           items = Morph.from_tsv(tsv, type, OpenRegister)
-          ensure_all_field_methods_set items.first, base_url_or_phase
           items.each {|item| results.push item }
           nil
         end
