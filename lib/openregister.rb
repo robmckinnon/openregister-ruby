@@ -234,7 +234,7 @@ class OpenRegister::MorphListener
              elsif cardinality_n? field
                n_split_methods(symbol, field)
              elsif register = register_for_field(field)
-               retrieve_method(symbol, register)
+               direct_retrieve_method(symbol, register)
              end
     methods.each {|method| klass.class_eval method} if methods
   end
@@ -245,39 +245,28 @@ class OpenRegister::MorphListener
   @#{symbol}
 end"]
     if register = register_for_field(field)
-      method = "_#{symbol}"
-      instance_variable = "@#{method}"
-      methods << "
-def #{method}
-  unless #{instance_variable}
-    #{instance_variable} = #{symbol}.map {|code| OpenRegister.record('#{field.register}', code, _base_url_or_phase) }
-  end
-  #{instance_variable}
-end"
+      method = retrieve_method(symbol, "#{symbol}.map {|code| OpenRegister.record('#{field.register}', code, _base_url_or_phase) }")
+      methods << method
     end
     methods
   end
 
   def curie_retrieve_method symbol
-    method = "_#{symbol}"
-    instance_variable = "@#{method}"
-    ["def #{method}
-  unless #{instance_variable}
-    curie = send(:#{symbol}).split(':')
-    register = curie.first
-    field = curie.last
-    #{instance_variable} = OpenRegister.record(register, field, _base_url_or_phase)
-  end
-  #{instance_variable}
-end"]
+    retrieve = "(parts = send(:#{symbol}).split(':')) && OpenRegister.record(parts.first, parts.last, _base_url_or_phase)"
+    [retrieve_method(symbol, retrieve)]
   end
 
-  def retrieve_method symbol, register
+  def direct_retrieve_method symbol, register
+    retrieve = "OpenRegister.record('#{register}', send(:#{symbol}), _base_url_or_phase)"
+    [retrieve_method(symbol, retrieve)]
+  end
+
+  def retrieve_method symbol, retrieve
     method = "_#{symbol}"
     instance_variable = "@#{method}"
-    ["def #{method}
-  #{instance_variable} ||= OpenRegister.record('#{register}', send(:#{symbol}), _base_url_or_phase)
-end"]
+    "def #{method}
+  #{instance_variable} ||= #{retrieve}
+end"
   end
 
 end
