@@ -209,6 +209,7 @@ class OpenRegister::MorphListener
     klass.class_eval("def self._register(base_url_or_phase); OpenRegister.register(register, base_url_or_phase); end")
     klass.class_eval("def _register; self.class._register(_base_url_or_phase); end")
     klass.class_eval("def _register_fields; self._register._fields; end")
+    klass.class_eval("def _curie; [self.class.register, send(self.class.register.underscore)].join(':'); end")
   end
 
   def register_or_field_class? klass, symbol
