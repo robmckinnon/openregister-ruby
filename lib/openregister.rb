@@ -98,27 +98,45 @@ module OpenRegister
     def augment_register_fields base_url_or_phase, &block
       already_set = (@morph_listener_set || false)
       set_morph_listener(base_url_or_phase) unless already_set
-      list = yield
+      yield
       unset_morph_listener(base_url_or_phase) unless already_set
-      list
+    end
+
+    def prepare_url uri, page_size
+      if page_size != 100
+        "#{uri}.tsv?page-index=1&page-size=#{page_size}"
+      else
+        "#{uri}.tsv"
+      end
     end
 
     def retrieve uri, type, base_url_or_phase, all=false, page_size=100
-      list = augment_register_fields(base_url_or_phase) do
-        url = "#{uri}.tsv"
-        url = "#{url}?page-index=1&page-size=#{page_size}" if page_size != 100
-        results = []
+      url = prepare_url uri, page_size
+      results = []
+      augment_register_fields(base_url_or_phase) do
         response_list(url, all) do |tsv|
           items = Morph.from_tsv(tsv, type, OpenRegister)
-          items.each {|item| results.push item }
-          nil
+          items.each do |item|
+            additional_modification! item, base_url_or_phase, uri
+            results.push item
+          end
         end
-        results
       end
-      list.each { |item| item._base_url_or_phase = base_url_or_phase } if base_url_or_phase
-      list.each { |item| item._uri = uri if uri[/\/record\//] }
-      list.each { |item| convert_n_cardinality_data! item }
-      list
+      results
+    end
+
+    def additional_modification! item, base_url_or_phase, uri
+      set_base_url_or_phase! item, base_url_or_phase
+      set_uri! item, uri
+      convert_n_cardinality_data! item
+    end
+
+    def set_base_url_or_phase! item, base_url_or_phase
+      item._base_url_or_phase = base_url_or_phase if base_url_or_phase
+    end
+
+    def set_uri! item, uri
+      item._uri = uri if uri[/\/record\//]
     end
 
     def convert_n_cardinality_data! item
