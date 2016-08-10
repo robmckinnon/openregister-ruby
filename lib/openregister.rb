@@ -47,32 +47,32 @@ end
 module OpenRegister
   class << self
 
-    def registers base_url_or_phase=nil
-      registers = records_for :register, base_url_or_phase, all: true
+    def registers base_url_or_phase=nil, cache: nil
+      registers = records_for :register, base_url_or_phase, all: true, cache: cache
       registers.each { |register| set_register_uri! register, base_url_or_phase } if registers
       registers
     end
 
-    def register register_code, base_url_or_phase=nil
-      register = record :register, register_code, base_url_or_phase
+    def register register_code, base_url_or_phase=nil, cache: nil
+      register = record :register, register_code, base_url_or_phase, cache: cache
       set_register_uri! register, base_url_or_phase
       register
     end
 
-    def records_for register, base_url_or_phase=nil, all: false, page_size: 100
+    def records_for register, base_url_or_phase=nil, all: false, page_size: 100, cache: nil
       url = url_for :records, register, base_url_or_phase
-      retrieve url, register, base_url_or_phase, all, page_size
+      retrieve url, register, base_url_or_phase, cache, all, page_size
     end
 
-    def record register, record, base_url_or_phase=nil
+    def record register, record, base_url_or_phase=nil, cache: nil
       url = url_for "record/#{record}", register, base_url_or_phase
-      retrieve(url, register, base_url_or_phase).first
+      retrieve(url, register, base_url_or_phase, cache).first
     end
 
-    def field record, base_url_or_phase=nil
+    def field record, base_url_or_phase=nil, cache: nil
       @fields ||= {}
       key = "#{record}-#{base_url_or_phase}"
-      @fields[key] ||= record(:field, record, base_url_or_phase)
+      @fields[key] ||= record(:field, record, base_url_or_phase, cache: cache)
     end
 
     private
@@ -110,11 +110,11 @@ module OpenRegister
       end
     end
 
-    def retrieve uri, type, base_url_or_phase, all=false, page_size=100
+    def retrieve uri, type, base_url_or_phase, cache=nil, all=false, page_size=100
       url = prepare_url uri, page_size
       results = []
       augment_register_fields(base_url_or_phase) do
-        response_list(url, all) do |tsv|
+        response_list(url, all, cache) do |tsv|
           items = Morph.from_tsv(tsv, type, OpenRegister)
           items.each do |item|
             additional_modification! item, base_url_or_phase, uri
@@ -168,15 +168,23 @@ module OpenRegister
       end
     end
 
-    def response_list url, all, &block
-      response = RestClient.get(url)
-      tsv = response.body
+    def response_list url, all, cache, &block
+      tsv, rel_next =
+            if cache && (stored = cache.read(url)) && stored.present?
+              stored
+            else
+              response = RestClient.get(url)
+              body = response.body
+              link_header = response.headers[:link]
+              rel_next = link_header ? links(link_header)[:next] : nil
+              cache.write url, [body, rel_next] if cache && body
+              [body, rel_next]
+            end
+
       yield tsv
-      if all && link_header = response.headers[:link]
-        if rel_next = links(link_header)[:next]
-          next_url = "#{url.split('?').first}#{rel_next}"
-          response_list(next_url, all, &block)
-        end
+      if all && rel_next
+        next_url = "#{url.split('?').first}#{rel_next}"
+        response_list(next_url, all, cache, &block)
       end
       nil
     rescue RestClient::ResourceNotFound => e

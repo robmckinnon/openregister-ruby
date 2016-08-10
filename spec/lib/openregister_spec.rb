@@ -111,13 +111,46 @@ RSpec.describe OpenRegister do
     end
 
     it 'calls correct url' do
-      expect(OpenRegister).to receive(:retrieve).with('https://register.register.gov.uk/records', :register, nil, true, 100)
+      expect(OpenRegister).to receive(:retrieve).with('https://register.register.gov.uk/records', :register, nil, nil, true, 100)
       OpenRegister.registers
     end
 
     it 'sets _uri method on register returning uri correctly' do
       uri = OpenRegister.registers[1]._uri
       expect(uri).to eq('https://country.register.gov.uk/')
+    end
+
+    let(:cache) { double() }
+
+    context 'with cache passed in' do
+      it 'calls correct url' do
+        expect(OpenRegister).to receive(:retrieve).with('https://register.register.gov.uk/records', :register, nil, cache, true, 100)
+        OpenRegister.registers cache: cache
+      end
+    end
+
+    context 'with cache passed in and no value for key' do
+      it 'returns array of Ruby objects' do
+        expect(cache).to receive(:read).with('https://register.register.gov.uk/records.tsv').and_return nil
+        expect(cache).to receive(:write).with('https://register.register.gov.uk/records.tsv', [
+          File.read('./spec/fixtures/tsv/register-records.tsv'), nil
+        ])
+        records = OpenRegister.registers cache: cache
+        expect(records).to be_an(Array)
+        records.each { |r| expect(r).to be_an('OpenRegister::Register'.constantize) }
+      end
+    end
+
+    context 'with cache passed in and value for key exists' do
+      it 'returns array of Ruby objects' do
+        expect(cache).to receive(:read).with('https://register.register.gov.uk/records.tsv').and_return([
+          File.read('./spec/fixtures/tsv/register-records.tsv'), nil
+        ])
+        expect(cache).not_to receive(:write)
+        records = OpenRegister.registers cache: cache
+        expect(records).to be_an(Array)
+        records.each { |r| expect(r).to be_an('OpenRegister::Register'.constantize) }
+      end
     end
   end
 
@@ -132,7 +165,7 @@ RSpec.describe OpenRegister do
     it 'calls correct url' do
       expect(OpenRegister).to receive(:retrieve).with(
         'http://register.alpha.openregister.org/records', :register,
-        'http://register.alpha.openregister.org/', true, 100)
+        'http://register.alpha.openregister.org/', nil, true, 100)
       OpenRegister.registers 'http://register.alpha.openregister.org/'
     end
 
@@ -153,7 +186,7 @@ RSpec.describe OpenRegister do
     it 'calls correct url' do
       expect(OpenRegister).to receive(:retrieve).with(
         'http://register.alpha.openregister.org/records', :register,
-        :alpha, true, 100)
+        :alpha, nil, true, 100)
       OpenRegister.registers :alpha
     end
 
