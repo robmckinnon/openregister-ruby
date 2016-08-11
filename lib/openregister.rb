@@ -7,17 +7,17 @@ end
 
 class OpenRegister::Register
   include Morph
-  def _all_records page_size: 100
-    OpenRegister::records_for register.to_sym, try(:_base_url_or_phase), all: true, page_size: page_size
+  def _all_records page_size: 100, cache: nil
+    OpenRegister::records_for register.to_sym, try(:_base_url_or_phase), all: true, page_size: page_size, cache: cache
   end
 
-  def _records
-    OpenRegister::records_for register.to_sym, try(:_base_url_or_phase)
+  def _records cache: nil
+    OpenRegister::records_for register.to_sym, try(:_base_url_or_phase), cache: cache
   end
 
-  def _fields
+  def _fields cache: nil
     fields.map do |field|
-      OpenRegister.field field.to_sym, try(:_base_url_or_phase)
+      OpenRegister.field field.to_sym, try(:_base_url_or_phase), cache: cache
     end
   end
 end
@@ -70,9 +70,13 @@ module OpenRegister
     end
 
     def field record, base_url_or_phase=nil, cache: nil
-      @fields ||= {}
-      key = "#{record}-#{base_url_or_phase}"
-      @fields[key] ||= record(:field, record, base_url_or_phase, cache: cache)
+      if cache
+        record(:field, record, base_url_or_phase, cache: cache)
+      else
+        @fields ||= {}
+        key = "#{record}-#{base_url_or_phase}"
+        @fields[key] ||= record(:field, record, base_url_or_phase)
+      end
     end
 
     private

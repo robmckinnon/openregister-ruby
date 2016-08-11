@@ -227,6 +227,25 @@ RSpec.describe OpenRegister do
       records.each { |r| expect(r).to be_an(OpenRegister::Country) }
       expect(records.size).to eq(2)
     end
+
+    context 'when passed cache' do
+      it 'returns records as Ruby objects and writes paginated tsv to cache' do
+        cache = double()
+        expect(cache).to receive(:read).with('https://country.register.gov.uk/records.tsv').and_return nil
+        expect(cache).to receive(:write).with('https://country.register.gov.uk/records.tsv', [
+          File.read('./spec/fixtures/tsv/country-records-1.tsv'), '?page-index=2&page-size=100'
+        ])
+        expect(cache).to receive(:read).with('https://country.register.gov.uk/records.tsv?page-index=2&page-size=100').and_return nil
+        expect(cache).to receive(:write).with('https://country.register.gov.uk/records.tsv?page-index=2&page-size=100', [
+          File.read('./spec/fixtures/tsv/country-records-2.tsv'), nil
+        ])
+
+        records = OpenRegister.registers[1]._all_records cache: cache
+        expect(records).to be_an(Array)
+        records.each { |r| expect(r).to be_an(OpenRegister::Country) }
+        expect(records.size).to eq(2)
+      end
+    end
   end
 
   describe 'retrieve a register\'s records first page only via #_records' do
@@ -235,6 +254,20 @@ RSpec.describe OpenRegister do
       expect(records).to be_an(Array)
       records.each { |r| expect(r).to be_an(OpenRegister::Country) }
       expect(records.size).to eq(1)
+    end
+    context 'when passed cache' do
+      it 'returns records as Ruby objects and writes paginated tsv to cache' do
+        cache = double()
+        expect(cache).to receive(:read).with('https://country.register.gov.uk/records.tsv').and_return nil
+        expect(cache).to receive(:write).with('https://country.register.gov.uk/records.tsv', [
+          File.read('./spec/fixtures/tsv/country-records-1.tsv'), '?page-index=2&page-size=100'
+        ])
+
+        records = OpenRegister.registers[1]._records cache: cache
+        expect(records).to be_an(Array)
+        records.each { |r| expect(r).to be_an(OpenRegister::Country) }
+        expect(records.size).to eq(1)
+      end
     end
   end
 
@@ -247,6 +280,14 @@ RSpec.describe OpenRegister do
       fields.each do |r|
         expect(r).to be_a(RSpec::Mocks::Double)
         expect(r.instance_variable_get(:@name)).to eq("OpenRegister::Field")
+      end
+    end
+    context 'when passed cache' do
+      it 'returns records as Ruby objects and writes paginated tsv to cache' do
+        cache = double()
+        register = OpenRegister.registers[1]
+        fields = register._fields cache: cache
+        expect(fields).to be_an(Array)
       end
     end
   end
