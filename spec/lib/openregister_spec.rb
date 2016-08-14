@@ -123,33 +123,37 @@ RSpec.describe OpenRegister do
     let(:cache) { double() }
 
     context 'with cache passed in' do
+      before { OpenRegister.cache = cache }
+      after { OpenRegister.cache = nil }
       it 'calls correct url' do
         expect(OpenRegister).to receive(:retrieve).with('https://register.register.gov.uk/records', :register, nil, cache, true, 100)
-        OpenRegister.registers cache: cache
+        OpenRegister.registers
       end
-    end
 
-    context 'with cache passed in and no value for key' do
-      it 'returns array of Ruby objects' do
-        expect(cache).to receive(:read).with('https://register.register.gov.uk/records.tsv').and_return nil
-        expect(cache).to receive(:write).with('https://register.register.gov.uk/records.tsv', [
-          File.read('./spec/fixtures/tsv/register-records.tsv'), nil
-        ])
-        records = OpenRegister.registers cache: cache
-        expect(records).to be_an(Array)
-        records.each { |r| expect(r).to be_an('OpenRegister::Register'.constantize) }
+      context 'with cache passed in and no value for key' do
+        it 'returns array of Ruby objects' do
+          expect(cache).to receive(:read).with('https://register.register.gov.uk/records.tsv').and_return nil
+          expect(cache).to receive(:write).with('https://register.register.gov.uk/records.tsv', [
+            File.read('./spec/fixtures/tsv/register-records.tsv'), nil
+          ])
+          OpenRegister.cache = cache
+          records = OpenRegister.registers
+          expect(records).to be_an(Array)
+          records.each { |r| expect(r).to be_an('OpenRegister::Register'.constantize) }
+        end
       end
-    end
 
-    context 'with cache passed in and value for key exists' do
-      it 'returns array of Ruby objects' do
-        expect(cache).to receive(:read).with('https://register.register.gov.uk/records.tsv').and_return([
-          File.read('./spec/fixtures/tsv/register-records.tsv'), nil
-        ])
-        expect(cache).not_to receive(:write)
-        records = OpenRegister.registers cache: cache
-        expect(records).to be_an(Array)
-        records.each { |r| expect(r).to be_an('OpenRegister::Register'.constantize) }
+      context 'with cache passed in and value for key exists' do
+        it 'returns array of Ruby objects' do
+          expect(cache).to receive(:read).with('https://register.register.gov.uk/records.tsv').and_return([
+            File.read('./spec/fixtures/tsv/register-records.tsv'), nil
+          ])
+          expect(cache).not_to receive(:write)
+          OpenRegister.cache = cache
+          records = OpenRegister.registers
+          expect(records).to be_an(Array)
+          records.each { |r| expect(r).to be_an('OpenRegister::Register'.constantize) }
+        end
       end
     end
   end
@@ -229,8 +233,14 @@ RSpec.describe OpenRegister do
     end
 
     context 'when passed cache' do
+      let(:cache) { double() }
+      before { OpenRegister.cache = cache }
+      after { OpenRegister.cache = nil }
       it 'returns records as Ruby objects and writes paginated tsv to cache' do
-        cache = double()
+        expect(cache).to receive(:read).with('https://register.register.gov.uk/records.tsv').and_return nil
+        expect(cache).to receive(:write).with('https://register.register.gov.uk/records.tsv', [
+          File.read('./spec/fixtures/tsv/register-records.tsv'), nil
+        ])
         expect(cache).to receive(:read).with('https://country.register.gov.uk/records.tsv').and_return nil
         expect(cache).to receive(:write).with('https://country.register.gov.uk/records.tsv', [
           File.read('./spec/fixtures/tsv/country-records-1.tsv'), '?page-index=2&page-size=100'
@@ -240,7 +250,7 @@ RSpec.describe OpenRegister do
           File.read('./spec/fixtures/tsv/country-records-2.tsv'), nil
         ])
 
-        records = OpenRegister.registers[1]._all_records cache: cache
+        records = OpenRegister.registers[1]._all_records
         expect(records).to be_an(Array)
         records.each { |r| expect(r).to be_an(OpenRegister::Country) }
         expect(records.size).to eq(2)
@@ -256,14 +266,20 @@ RSpec.describe OpenRegister do
       expect(records.size).to eq(1)
     end
     context 'when passed cache' do
+      let(:cache) { double() }
+      before { OpenRegister.cache = cache }
+      after { OpenRegister.cache = nil }
       it 'returns records as Ruby objects and writes paginated tsv to cache' do
-        cache = double()
+        expect(cache).to receive(:read).with('https://register.register.gov.uk/records.tsv').and_return nil
+        expect(cache).to receive(:write).with('https://register.register.gov.uk/records.tsv', [
+          File.read('./spec/fixtures/tsv/register-records.tsv'), nil
+        ])
         expect(cache).to receive(:read).with('https://country.register.gov.uk/records.tsv').and_return nil
         expect(cache).to receive(:write).with('https://country.register.gov.uk/records.tsv', [
           File.read('./spec/fixtures/tsv/country-records-1.tsv'), '?page-index=2&page-size=100'
         ])
 
-        records = OpenRegister.registers[1]._records cache: cache
+        records = OpenRegister.registers[1]._records
         expect(records).to be_an(Array)
         records.each { |r| expect(r).to be_an(OpenRegister::Country) }
         expect(records.size).to eq(1)
@@ -283,10 +299,16 @@ RSpec.describe OpenRegister do
       end
     end
     context 'when passed cache' do
+      let(:cache) { double() }
+      before { OpenRegister.cache = cache }
+      after { OpenRegister.cache = nil }
       it 'returns records as Ruby objects and writes paginated tsv to cache' do
-        cache = double()
+        expect(cache).to receive(:read).with('https://register.register.gov.uk/records.tsv').and_return nil
+        expect(cache).to receive(:write).with('https://register.register.gov.uk/records.tsv', [
+          File.read('./spec/fixtures/tsv/register-records.tsv'), nil
+        ])
         register = OpenRegister.registers[1]
-        fields = register._fields cache: cache
+        fields = register._fields
         expect(fields).to be_an(Array)
       end
     end

@@ -7,17 +7,17 @@ end
 
 class OpenRegister::Register
   include Morph
-  def _all_records page_size: 100, cache: nil
-    OpenRegister::records_for register.to_sym, try(:_base_url_or_phase), all: true, page_size: page_size, cache: cache
+  def _all_records page_size: 100
+    OpenRegister::records_for register.to_sym, try(:_base_url_or_phase), all: true, page_size: page_size
   end
 
-  def _records cache: nil
-    OpenRegister::records_for register.to_sym, try(:_base_url_or_phase), cache: cache
+  def _records
+    OpenRegister::records_for register.to_sym, try(:_base_url_or_phase)
   end
 
-  def _fields cache: nil
+  def _fields
     fields.map do |field|
-      OpenRegister.field field.to_sym, try(:_base_url_or_phase), cache: cache
+      OpenRegister.field field.to_sym, try(:_base_url_or_phase)
     end
   end
 end
@@ -47,31 +47,35 @@ end
 module OpenRegister
   class << self
 
-    def registers base_url_or_phase=nil, cache: nil
-      registers = records_for :register, base_url_or_phase, all: true, cache: cache
+    def cache= cache
+      @cache = cache
+    end
+
+    def registers base_url_or_phase=nil
+      registers = records_for :register, base_url_or_phase, all: true
       registers.each { |register| set_register_uri! register, base_url_or_phase } if registers
       registers
     end
 
-    def register register_code, base_url_or_phase=nil, cache: nil
-      register = record :register, register_code, base_url_or_phase, cache: cache
+    def register register_code, base_url_or_phase=nil
+      register = record :register, register_code, base_url_or_phase
       set_register_uri! register, base_url_or_phase
       register
     end
 
-    def records_for register, base_url_or_phase=nil, all: false, page_size: 100, cache: nil
+    def records_for register, base_url_or_phase=nil, all: false, page_size: 100
       url = url_for :records, register, base_url_or_phase
-      retrieve url, register, base_url_or_phase, cache, all, page_size
+      retrieve url, register, base_url_or_phase, @cache, all, page_size
     end
 
-    def record register, record, base_url_or_phase=nil, cache: nil
+    def record register, record, base_url_or_phase=nil
       url = url_for "record/#{record}", register, base_url_or_phase
-      retrieve(url, register, base_url_or_phase, cache).first
+      retrieve(url, register, base_url_or_phase, @cache).first
     end
 
-    def field record, base_url_or_phase=nil, cache: nil
-      if cache
-        record(:field, record, base_url_or_phase, cache: cache)
+    def field record, base_url_or_phase=nil
+      if @cache
+        record(:field, record, base_url_or_phase)
       else
         @fields ||= {}
         key = "#{record}-#{base_url_or_phase}"
