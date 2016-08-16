@@ -17,6 +17,18 @@ To use:
 require 'openregister'
 ```
 
+### Caching
+
+To cache API call results, set a cache object that responds to `read` and `write` methods, e.g. a cache supporting the
+[ActiveSupport::Cache::Store](http://api.rubyonrails.org/classes/ActiveSupport/Cache/Store.html) interface would work.
+
+For example, in a Rails app you can create a file in `config/initializers` to set the Rails cache on OpenRegister:
+
+```rb
+require 'openregister'
+OpenRegister.cache = Rails.cache
+```
+
 ## Usage
 
 ### Retrieve list of registers
