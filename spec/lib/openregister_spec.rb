@@ -111,13 +111,50 @@ RSpec.describe OpenRegister do
     end
 
     it 'calls correct url' do
-      expect(OpenRegister).to receive(:retrieve).with('https://register.register.gov.uk/records', :register, nil, true, 100)
+      expect(OpenRegister).to receive(:retrieve).with('https://register.register.gov.uk/records', :register, nil, nil, true, 100)
       OpenRegister.registers
     end
 
     it 'sets _uri method on register returning uri correctly' do
       uri = OpenRegister.registers[1]._uri
       expect(uri).to eq('https://country.register.gov.uk/')
+    end
+
+    let(:cache) { double() }
+
+    context 'with cache passed in' do
+      before { OpenRegister.cache = cache }
+      after { OpenRegister.cache = nil }
+      it 'calls correct url' do
+        expect(OpenRegister).to receive(:retrieve).with('https://register.register.gov.uk/records', :register, nil, cache, true, 100)
+        OpenRegister.registers
+      end
+
+      context 'with cache passed in and no value for key' do
+        it 'returns array of Ruby objects' do
+          expect(cache).to receive(:read).with('https://register.register.gov.uk/records.tsv').and_return nil
+          expect(cache).to receive(:write).with('https://register.register.gov.uk/records.tsv', [
+            File.read('./spec/fixtures/tsv/register-records.tsv'), nil
+          ])
+          OpenRegister.cache = cache
+          records = OpenRegister.registers
+          expect(records).to be_an(Array)
+          records.each { |r| expect(r).to be_an('OpenRegister::Register'.constantize) }
+        end
+      end
+
+      context 'with cache passed in and value for key exists' do
+        it 'returns array of Ruby objects' do
+          expect(cache).to receive(:read).with('https://register.register.gov.uk/records.tsv').and_return([
+            File.read('./spec/fixtures/tsv/register-records.tsv'), nil
+          ])
+          expect(cache).not_to receive(:write)
+          OpenRegister.cache = cache
+          records = OpenRegister.registers
+          expect(records).to be_an(Array)
+          records.each { |r| expect(r).to be_an('OpenRegister::Register'.constantize) }
+        end
+      end
     end
   end
 
@@ -132,7 +169,7 @@ RSpec.describe OpenRegister do
     it 'calls correct url' do
       expect(OpenRegister).to receive(:retrieve).with(
         'http://register.alpha.openregister.org/records', :register,
-        'http://register.alpha.openregister.org/', true, 100)
+        'http://register.alpha.openregister.org/', nil, true, 100)
       OpenRegister.registers 'http://register.alpha.openregister.org/'
     end
 
@@ -153,7 +190,7 @@ RSpec.describe OpenRegister do
     it 'calls correct url' do
       expect(OpenRegister).to receive(:retrieve).with(
         'http://register.alpha.openregister.org/records', :register,
-        :alpha, true, 100)
+        :alpha, nil, true, 100)
       OpenRegister.registers :alpha
     end
 
@@ -194,6 +231,31 @@ RSpec.describe OpenRegister do
       records.each { |r| expect(r).to be_an(OpenRegister::Country) }
       expect(records.size).to eq(2)
     end
+
+    context 'when passed cache' do
+      let(:cache) { double() }
+      before { OpenRegister.cache = cache }
+      after { OpenRegister.cache = nil }
+      it 'returns records as Ruby objects and writes paginated tsv to cache' do
+        expect(cache).to receive(:read).with('https://register.register.gov.uk/records.tsv').and_return nil
+        expect(cache).to receive(:write).with('https://register.register.gov.uk/records.tsv', [
+          File.read('./spec/fixtures/tsv/register-records.tsv'), nil
+        ])
+        expect(cache).to receive(:read).with('https://country.register.gov.uk/records.tsv').and_return nil
+        expect(cache).to receive(:write).with('https://country.register.gov.uk/records.tsv', [
+          File.read('./spec/fixtures/tsv/country-records-1.tsv'), '?page-index=2&page-size=100'
+        ])
+        expect(cache).to receive(:read).with('https://country.register.gov.uk/records.tsv?page-index=2&page-size=100').and_return nil
+        expect(cache).to receive(:write).with('https://country.register.gov.uk/records.tsv?page-index=2&page-size=100', [
+          File.read('./spec/fixtures/tsv/country-records-2.tsv'), nil
+        ])
+
+        records = OpenRegister.registers[1]._all_records
+        expect(records).to be_an(Array)
+        records.each { |r| expect(r).to be_an(OpenRegister::Country) }
+        expect(records.size).to eq(2)
+      end
+    end
   end
 
   describe 'retrieve a register\'s records first page only via #_records' do
@@ -202,6 +264,26 @@ RSpec.describe OpenRegister do
       expect(records).to be_an(Array)
       records.each { |r| expect(r).to be_an(OpenRegister::Country) }
       expect(records.size).to eq(1)
+    end
+    context 'when passed cache' do
+      let(:cache) { double() }
+      before { OpenRegister.cache = cache }
+      after { OpenRegister.cache = nil }
+      it 'returns records as Ruby objects and writes paginated tsv to cache' do
+        expect(cache).to receive(:read).with('https://register.register.gov.uk/records.tsv').and_return nil
+        expect(cache).to receive(:write).with('https://register.register.gov.uk/records.tsv', [
+          File.read('./spec/fixtures/tsv/register-records.tsv'), nil
+        ])
+        expect(cache).to receive(:read).with('https://country.register.gov.uk/records.tsv').and_return nil
+        expect(cache).to receive(:write).with('https://country.register.gov.uk/records.tsv', [
+          File.read('./spec/fixtures/tsv/country-records-1.tsv'), '?page-index=2&page-size=100'
+        ])
+
+        records = OpenRegister.registers[1]._records
+        expect(records).to be_an(Array)
+        records.each { |r| expect(r).to be_an(OpenRegister::Country) }
+        expect(records.size).to eq(1)
+      end
     end
   end
 
@@ -214,6 +296,20 @@ RSpec.describe OpenRegister do
       fields.each do |r|
         expect(r).to be_a(RSpec::Mocks::Double)
         expect(r.instance_variable_get(:@name)).to eq("OpenRegister::Field")
+      end
+    end
+    context 'when passed cache' do
+      let(:cache) { double() }
+      before { OpenRegister.cache = cache }
+      after { OpenRegister.cache = nil }
+      it 'returns records as Ruby objects and writes paginated tsv to cache' do
+        expect(cache).to receive(:read).with('https://register.register.gov.uk/records.tsv').and_return nil
+        expect(cache).to receive(:write).with('https://register.register.gov.uk/records.tsv', [
+          File.read('./spec/fixtures/tsv/register-records.tsv'), nil
+        ])
+        register = OpenRegister.registers[1]
+        fields = register._fields
+        expect(fields).to be_an(Array)
       end
     end
   end

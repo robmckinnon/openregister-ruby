@@ -47,6 +47,10 @@ end
 module OpenRegister
   class << self
 
+    def cache= cache
+      @cache = cache
+    end
+
     def registers base_url_or_phase=nil
       registers = records_for :register, base_url_or_phase, all: true
       registers.each { |register| set_register_uri! register, base_url_or_phase } if registers
@@ -61,18 +65,22 @@ module OpenRegister
 
     def records_for register, base_url_or_phase=nil, all: false, page_size: 100
       url = url_for :records, register, base_url_or_phase
-      retrieve url, register, base_url_or_phase, all, page_size
+      retrieve url, register, base_url_or_phase, @cache, all, page_size
     end
 
     def record register, record, base_url_or_phase=nil
       url = url_for "record/#{record}", register, base_url_or_phase
-      retrieve(url, register, base_url_or_phase).first
+      retrieve(url, register, base_url_or_phase, @cache).first
     end
 
     def field record, base_url_or_phase=nil
-      @fields ||= {}
-      key = "#{record}-#{base_url_or_phase}"
-      @fields[key] ||= record(:field, record, base_url_or_phase)
+      if @cache
+        record(:field, record, base_url_or_phase)
+      else
+        @fields ||= {}
+        key = "#{record}-#{base_url_or_phase}"
+        @fields[key] ||= record(:field, record, base_url_or_phase)
+      end
     end
 
     private
@@ -98,27 +106,45 @@ module OpenRegister
     def augment_register_fields base_url_or_phase, &block
       already_set = (@morph_listener_set || false)
       set_morph_listener(base_url_or_phase) unless already_set
-      list = yield
+      yield
       unset_morph_listener(base_url_or_phase) unless already_set
-      list
     end
 
-    def retrieve uri, type, base_url_or_phase, all=false, page_size=100
-      list = augment_register_fields(base_url_or_phase) do
-        url = "#{uri}.tsv"
-        url = "#{url}?page-index=1&page-size=#{page_size}" if page_size != 100
-        results = []
-        response_list(url, all) do |tsv|
-          items = Morph.from_tsv(tsv, type, OpenRegister)
-          items.each {|item| results.push item }
-          nil
-        end
-        results
+    def prepare_url uri, page_size
+      if page_size != 100
+        "#{uri}.tsv?page-index=1&page-size=#{page_size}"
+      else
+        "#{uri}.tsv"
       end
-      list.each { |item| item._base_url_or_phase = base_url_or_phase } if base_url_or_phase
-      list.each { |item| item._uri = uri if uri[/\/record\//] }
-      list.each { |item| convert_n_cardinality_data! item }
-      list
+    end
+
+    def retrieve uri, type, base_url_or_phase, cache=nil, all=false, page_size=100
+      url = prepare_url uri, page_size
+      results = []
+      augment_register_fields(base_url_or_phase) do
+        response_list(url, all, cache) do |tsv|
+          items = Morph.from_tsv(tsv, type, OpenRegister)
+          items.each do |item|
+            additional_modification! item, base_url_or_phase, uri
+            results.push item
+          end
+        end
+      end
+      results
+    end
+
+    def additional_modification! item, base_url_or_phase, uri
+      set_base_url_or_phase! item, base_url_or_phase
+      set_uri! item, uri
+      convert_n_cardinality_data! item
+    end
+
+    def set_base_url_or_phase! item, base_url_or_phase
+      item._base_url_or_phase = base_url_or_phase if base_url_or_phase
+    end
+
+    def set_uri! item, uri
+      item._uri = uri if uri[/\/record\//]
     end
 
     def convert_n_cardinality_data! item
@@ -150,15 +176,23 @@ module OpenRegister
       end
     end
 
-    def response_list url, all, &block
-      response = RestClient.get(url)
-      tsv = response.body
+    def response_list url, all, cache, &block
+      tsv, rel_next =
+            if cache && (stored = cache.read(url)) && stored.present?
+              stored
+            else
+              response = RestClient.get(url)
+              body = response.body
+              link_header = response.headers[:link]
+              rel_next = link_header ? links(link_header)[:next] : nil
+              cache.write url, [body, rel_next] if cache && body
+              [body, rel_next]
+            end
+
       yield tsv
-      if all && link_header = response.headers[:link]
-        if rel_next = links(link_header)[:next]
-          next_url = "#{url.split('?').first}#{rel_next}"
-          response_list(next_url, all, &block)
-        end
+      if all && rel_next
+        next_url = "#{url.split('?').first}#{rel_next}"
+        response_list(next_url, all, cache, &block)
       end
       nil
     rescue RestClient::ResourceNotFound => e

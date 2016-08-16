@@ -23,18 +23,18 @@ Gem::Specification.new do |s|
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<morph>.freeze, ["~> 0.5.0"])
-      s.add_runtime_dependency(%q<rest-client>.freeze, ["~> 1"])
+      s.add_runtime_dependency(%q<rest-client>.freeze, ["~> 2"])
       s.add_development_dependency(%q<guard-rspec>.freeze, ["~> 4"])
       s.add_development_dependency(%q<webmock>.freeze, ["~> 2"])
     else
       s.add_dependency(%q<morph>.freeze, ["~> 0.5.0"])
-      s.add_dependency(%q<rest-client>.freeze, ["~> 1"])
+      s.add_dependency(%q<rest-client>.freeze, ["~> 2"])
       s.add_dependency(%q<guard-rspec>.freeze, ["~> 4"])
       s.add_dependency(%q<webmock>.freeze, ["~> 2"])
     end
   else
     s.add_dependency(%q<morph>.freeze, ["~> 0.5.0"])
-    s.add_dependency(%q<rest-client>.freeze, ["~> 1"])
+    s.add_dependency(%q<rest-client>.freeze, ["~> 2"])
     s.add_dependency(%q<guard-rspec>.freeze, ["~> 4"])
     s.add_dependency(%q<webmock>.freeze, ["~> 2"])
   end

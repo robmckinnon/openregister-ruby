@@ -10,4 +10,4 @@ group :test do
 end
 
 gem 'morph', '>= 0.5.0'
-gem 'rest-client'
+gem 'rest-client', '>= 2.0.0'
