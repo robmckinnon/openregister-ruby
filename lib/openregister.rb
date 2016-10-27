@@ -26,6 +26,10 @@ class OpenRegister::Field
   include Morph
 end
 
+class OpenRegister::Entry
+  include Morph
+end
+
 module OpenRegister::Helpers
   def is_entry_resource_field? symbol
     [:entry_number, :entry_timestamp, :item_hash].include? symbol
@@ -71,6 +75,18 @@ module OpenRegister
     def record register, record, base_url_or_phase=nil
       url = url_for "record/#{record}", register, base_url_or_phase
       retrieve(url, register, base_url_or_phase, @cache).first
+    end
+
+    def item register, item_hash, base_url_or_phase=nil
+      url = url_for "item/#{item_hash}", register, base_url_or_phase
+      item = retrieve(url, register, base_url_or_phase, @cache).first
+      item.item_hash = item_hash if item
+      item
+    end
+
+    def entries register, record, base_url_or_phase=nil
+      url = url_for "record/#{record}/entries", register, base_url_or_phase
+      retrieve(url, :entry, base_url_or_phase, @cache)
     end
 
     def field record, base_url_or_phase=nil

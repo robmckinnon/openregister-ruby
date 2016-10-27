@@ -101,6 +101,18 @@ RSpec.describe OpenRegister do
 
     stub_tsv_request('http://food-premises-type.alpha.openregister.org/record/Restaurant.tsv',
       './spec/fixtures/tsv/food-premises-type-restaurant.tsv')
+
+    stub_tsv_request('http://company.discovery.openregister.org/record/07007398/entries.tsv',
+      './spec/fixtures/tsv/company-07007398-entries.tsv')
+
+    stub_tsv_request('http://company.discovery.openregister.org/item/sha-256:cbe10411a9c0d760dee3a3f5aca27884702bdb806b60e15974953b1b62982297.tsv',
+      './spec/fixtures/tsv/company-sha-256-cbe10411a9c0d760dee3a3f5aca27884702bdb806b60e15974953b1b62982297.tsv')
+
+    stub_tsv_request('http://company.discovery.openregister.org/item/sha-256:d895d4d4a41c2b1b1ac07065174292790633e2eb7c4c20d7bf0b5f77798f03d3.tsv',
+      './spec/fixtures/tsv/company-sha-256-d895d4d4a41c2b1b1ac07065174292790633e2eb7c4c20d7bf0b5f77798f03d3.tsv')
+
+    stub_tsv_request('http://company.discovery.openregister.org/item/sha-256:6e21329956c6fa807e3a1a4fb5ce40a037917dfafbbeeeb45d2880745aef2850.tsv',
+      './spec/fixtures/tsv/company-sha-256-6e21329956c6fa807e3a1a4fb5ce40a037917dfafbbeeeb45d2880745aef2850.tsv')
   end
 
   describe 'retrieve registers index' do
@@ -383,6 +395,50 @@ RSpec.describe OpenRegister do
     }
   end
 
+  describe 'retrieve specific entries from a given register' do
+    let(:register) { 'company' }
+    let(:record) { '07007398' }
+
+    let(:entries) { OpenRegister.entries(register, record, :discovery) }
+
+    it 'returns array of entries' do
+      expect(entries).to be_a(Array)
+      expect(entries.size).to eq 3
+      entries.each do |entry|
+        expect(entry).to be_a(OpenRegister::Entry)
+      end
+    end
+
+    subject { entries.first }
+
+    include_examples 'has attributes', {
+      entry_number: "276",
+      entry_timestamp: "2016-10-05T16:02:34Z",
+      item_hash: "sha-256:cbe10411a9c0d760dee3a3f5aca27884702bdb806b60e15974953b1b62982297",
+    }
+  end
+
+  describe 'retrieve specific item for a given item hash and register' do
+    let(:register) { 'company' }
+    let(:item_hash) { 'sha-256:cbe10411a9c0d760dee3a3f5aca27884702bdb806b60e15974953b1b62982297' }
+
+    subject { OpenRegister.item(register, item_hash, :discovery) }
+
+    it 'returns item as object' do
+      expect(subject).to be_a(OpenRegister::Company)
+    end
+
+    include_examples 'has attributes', {
+      company: "07007398",
+      name: "GARSTON ENTERPRISE ACADEMY",
+      company_status: "",
+      industry: "85310",
+      start_date: "2009-02-09",
+      end_date: nil,
+      item_hash: 'sha-256:cbe10411a9c0d760dee3a3f5aca27884702bdb806b60e15974953b1b62982297',
+    }
+  end
+
   describe 'retrieve specific record from a given register' do
     let(:register) { 'food-premises' }
     let(:record) { '759332' }
@@ -398,6 +454,7 @@ RSpec.describe OpenRegister do
       end_date: nil,
       start_date: nil,
       food_premises_types: ["Restaurant"],
+      item_hash: "sha-256:cdb325272d9f0d658616f9c36e3de595fc2b5ce51091696283cf2ca1d3d5741f",
     }
 
     it 'returns its uri' do
