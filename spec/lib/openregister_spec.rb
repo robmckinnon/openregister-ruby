@@ -498,4 +498,37 @@ RSpec.describe OpenRegister do
       end
     end
   end
+
+  describe 'retrieve versions of a record from a given register' do
+    let(:register) { 'company' }
+    let(:record) { '07007398' }
+
+    let(:versions) { OpenRegister.versions(register, record, :discovery) }
+
+    it 'returns array of objects' do
+      expect(versions).to be_a(Array)
+      expect(versions.size).to eq 3
+      versions.each do |item|
+        expect(item).to be_a(OpenRegister::Company)
+      end
+    end
+
+    subject { versions.first }
+
+    include_examples 'has attributes', {
+      company: "07007398",
+      name: "GARSTON ENTERPRISE ACADEMY",
+      company_status: "",
+      industry: "85310",
+      start_date: "2009-02-09",
+      end_date: nil,
+      item_hash: 'sha-256:cbe10411a9c0d760dee3a3f5aca27884702bdb806b60e15974953b1b62982297',
+      entry_timestamp: '2016-10-05T16:02:34Z',
+      entry_number: '276',
+    }
+
+    it 'has highest entry number last' do
+      expect(versions.first.entry_number < versions.last.entry_number).to be true
+    end
+  end
 end

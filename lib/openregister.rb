@@ -89,6 +89,16 @@ module OpenRegister
       retrieve(url, :entry, base_url_or_phase, @cache)
     end
 
+    def versions register, record, base_url_or_phase=nil
+      entries = entries register, record, base_url_or_phase
+      entries.map do |entry|
+        item = item register, entry.item_hash, base_url_or_phase
+        item.entry_number = entry.entry_number if item
+        item.entry_timestamp = entry.entry_timestamp if item
+        item
+      end
+    end
+
     def field record, base_url_or_phase=nil
       if @cache
         record(:field, record, base_url_or_phase)
