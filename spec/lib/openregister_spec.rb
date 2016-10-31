@@ -411,6 +411,10 @@ RSpec.describe OpenRegister do
 
     subject { entries.first }
 
+    it "does not have _versions method on entry" do
+      expect(subject.respond_to?(:_versions)).to be false
+    end
+
     include_examples 'has attributes', {
       entry_number: "276",
       entry_timestamp: "2016-10-05T16:02:34Z",
@@ -513,22 +517,83 @@ RSpec.describe OpenRegister do
       end
     end
 
-    subject { versions.first }
-
-    include_examples 'has attributes', {
-      company: "07007398",
-      name: "GARSTON ENTERPRISE ACADEMY",
-      company_status: "",
-      industry: "85310",
-      start_date: "2009-02-09",
-      end_date: nil,
-      item_hash: 'sha-256:cbe10411a9c0d760dee3a3f5aca27884702bdb806b60e15974953b1b62982297',
-      entry_timestamp: '2016-10-05T16:02:34Z',
-      entry_number: '276',
-    }
-
     it 'has highest entry number last' do
       expect(versions.first.entry_number < versions.last.entry_number).to be true
     end
+
+    describe 'returned version' do
+      subject { versions.first }
+
+      include_examples 'has attributes', {
+        company: "07007398",
+        name: "GARSTON ENTERPRISE ACADEMY",
+        company_status: "",
+        industry: "85310",
+        start_date: "2009-02-09",
+        end_date: nil,
+        item_hash: 'sha-256:cbe10411a9c0d760dee3a3f5aca27884702bdb806b60e15974953b1b62982297',
+        entry_timestamp: '2016-10-05T16:02:34Z',
+        entry_number: '276',
+      }
+    end
+
+    describe 'retrieve versions of record from record object' do
+      let(:_versions) do
+        record = versions.first
+        record._versions
+      end
+
+      it 'returns array of objects' do
+        expect(_versions).to be_a(Array)
+        expect(_versions.size).to eq 3
+        _versions.each do |item|
+          expect(item).to be_a(OpenRegister::Company)
+        end
+      end
+
+      it 'has own record version as itself' do
+        expect(versions.first).to eq _versions.first
+      end
+
+      describe 'returned version' do
+        subject { _versions.first }
+
+        include_examples 'has attributes', {
+          company: "07007398",
+          name: "GARSTON ENTERPRISE ACADEMY",
+          company_status: "",
+          industry: "85310",
+          start_date: "2009-02-09",
+          end_date: nil,
+          item_hash: 'sha-256:cbe10411a9c0d760dee3a3f5aca27884702bdb806b60e15974953b1b62982297',
+          entry_timestamp: '2016-10-05T16:02:34Z',
+          entry_number: '276',
+        }
+      end
+
+      describe 'retrieve version changes' do
+        it "is array of array of differences" do
+          changes = versions.first._version_changes
+          expect(changes.size).to eq 3
+          expect(changes[0]).to eq({
+            "name" => "GARSTON ENTERPRISE ACADEMY",
+            "entry-number" => "276",
+            "entry-timestamp" => "2016-10-05T16:02:34Z"
+          })
+          expect(changes[1]).to eq({
+            "name" => "ENTERPRISE SOUTH LIVERPOOL ACADEMY",
+            "entry-number" => "277",
+            "entry-timestamp" => "2016-10-06T17:02:34Z"
+          })
+          expect(changes[2]).to eq({
+            "name" => "THE LIVERPOOL JOINT CATHOLIC AND CHURCH OF ENGLAND ACADEMIES TRUST",
+            "entry-number" => "278",
+            "entry-timestamp" => "2016-10-07T18:02:34Z"
+          })
+        end
+      end
+
+    end
   end
+
 end

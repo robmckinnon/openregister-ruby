@@ -90,12 +90,21 @@ module OpenRegister
     end
 
     def versions register, record, base_url_or_phase=nil
+      if record.respond_to?(:_curie)
+        object = record
+        record = record._curie.split(':').last
+      end
+
       entries = entries register, record, base_url_or_phase
       entries.map do |entry|
-        item = item register, entry.item_hash, base_url_or_phase
-        item.entry_number = entry.entry_number if item
-        item.entry_timestamp = entry.entry_timestamp if item
-        item
+        if object && object.respond_to?(:entry_number) && (object.entry_number == entry.entry_number)
+          object
+        else
+          item = item register, entry.item_hash, base_url_or_phase
+          item.entry_number = entry.entry_number if item
+          item.entry_timestamp = entry.entry_timestamp if item
+          item
+        end
       end
     end
 
@@ -162,6 +171,7 @@ module OpenRegister
     def additional_modification! item, base_url_or_phase, uri
       set_base_url_or_phase! item, base_url_or_phase
       set_uri! item, uri
+      define_versions! item
       convert_n_cardinality_data! item
     end
 
@@ -171,6 +181,32 @@ module OpenRegister
 
     def set_uri! item, uri
       item._uri = uri if uri[/\/record\//]
+    end
+
+    def define_versions! item
+      if !item.respond_to?(:_versions) &&
+          item.respond_to?(:entry_number) &&
+          item.class != OpenRegister::Entry
+        item.class.class_eval("def _versions; OpenRegister::versions(self.class.register, self, _base_url_or_phase); end")
+        item.class.class_eval("
+  def _version_changes
+    versions = _versions
+    if versions.size == 1
+      []
+    else
+      changes = [versions[0]._field_values.to_a - versions[1]._field_values.to_a] +
+        1.upto(versions.size - 1).map do |i|
+          versions[i]._field_values.to_a - versions[i - 1]._field_values.to_a
+        end
+      changes.map do |list|
+        list.each_with_object({}) do |fields, hash|
+          hash[fields[0]] = fields[1] unless fields[0] == 'item-hash'
+        end
+      end
+    end
+  end
+        ")
+      end
     end
 
     def convert_n_cardinality_data! item
@@ -270,6 +306,7 @@ class OpenRegister::MorphListener
     klass.class_eval("def _register; self.class._register(_base_url_or_phase); end")
     klass.class_eval("def _register_fields; self._register._fields; end")
     klass.class_eval("def _curie; [self.class.register, send(self.class.register.underscore)].join(':'); end")
+    klass.class_eval("def _field_values; self.instance_variables.each_with_object({}){|x,h| h[x.to_s.sub('@','').gsub('_','-')] = self.instance_variable_get(x)}; end")
   end
 
   def register_or_field_class? klass, symbol
