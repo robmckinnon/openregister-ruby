@@ -577,16 +577,19 @@ RSpec.describe OpenRegister do
           expect(changes.size).to eq 3
           expect(changes[0]).to eq({
             "name" => "GARSTON ENTERPRISE ACADEMY",
+            "name-change-date" => nil,
             "entry-number" => "276",
             "entry-timestamp" => "2016-10-05T16:02:34Z"
           })
           expect(changes[1]).to eq({
             "name" => "ENTERPRISE SOUTH LIVERPOOL ACADEMY",
+            "name-change-date" => "2009-12-21",
             "entry-number" => "277",
             "entry-timestamp" => "2016-10-06T17:02:34Z"
           })
           expect(changes[2]).to eq({
             "name" => "THE LIVERPOOL JOINT CATHOLIC AND CHURCH OF ENGLAND ACADEMIES TRUST",
+            "name-change-date" => "2015-03-08",
             "entry-number" => "278",
             "entry-timestamp" => "2016-10-07T18:02:34Z"
           })
