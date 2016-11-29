@@ -573,7 +573,8 @@ RSpec.describe OpenRegister do
 
       describe 'retrieve version changes' do
         it "is array of array of differences" do
-          changes = versions.first._version_changes
+          entry = versions.first
+          changes = entry._version_changes
           expect(changes.size).to eq 3
           expect(changes[0]).to eq({
             "name" => "GARSTON ENTERPRISE ACADEMY",
@@ -596,6 +597,15 @@ RSpec.describe OpenRegister do
         end
       end
 
+      describe 'display version changes' do
+        it "shows value changed with date range" do
+          entry = versions.first
+          display = entry._version_change_display(:name, :start_date, :name_change_date)
+          expect(display.size).to eq 2
+          expect(display[0]).to eq "ENTERPRISE SOUTH LIVERPOOL ACADEMY 2009-12-21 - 2015-03-08"
+          expect(display[1]).to eq "GARSTON ENTERPRISE ACADEMY 2009-02-09 - 2009-12-21"
+        end
+      end
     end
   end
 

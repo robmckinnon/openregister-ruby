@@ -48,6 +48,49 @@ module OpenRegister::Helpers
   end
 end
 
+module OpenRegister::VersionMethods
+  def _versions
+    OpenRegister::versions(self.class.register, self, _base_url_or_phase)
+  end
+
+  def _version_changes
+    versions = _versions
+    if versions.size == 1
+      []
+    else
+      changes = [versions[0]._field_values.to_a - versions[1]._field_values.to_a] +
+        1.upto(versions.size - 1).map do |i|
+          versions[i]._field_values.to_a - versions[i - 1]._field_values.to_a
+        end
+      changes.map do |list|
+        list.each_with_object({}) do |fields, hash|
+          hash[fields[0]] = fields[1] unless fields[0] == 'item-hash'
+        end
+      end
+    end
+  end
+
+  def _version_change_display field, initial_date_field, change_date_field
+    field = field.to_s.gsub('_','-')
+    change_date_field = change_date_field.to_s.gsub('_','-')
+    changes_newest_first = _version_changes.select{|c| c.has_key?(field)}.reverse
+
+    lines = []
+    changes_newest_first.slice(1..-1).each_with_index do |change,i|
+      last_index = i == (changes_newest_first.size - 2)
+      value = change[field]
+      initial_date = if last_index
+                       send(initial_date_field)
+                     else
+                       change[change_date_field]
+                     end
+      until_date = changes_newest_first[i][change_date_field] || change[change_date_field]
+      lines << value + " " + initial_date.to_s + " - " + until_date.to_s
+    end
+    lines
+  end
+end
+
 module OpenRegister
   class << self
 
@@ -187,25 +230,7 @@ module OpenRegister
       if !item.respond_to?(:_versions) &&
           item.respond_to?(:entry_number) &&
           item.class != OpenRegister::Entry
-        item.class.class_eval("def _versions; OpenRegister::versions(self.class.register, self, _base_url_or_phase); end")
-        item.class.class_eval("
-  def _version_changes
-    versions = _versions
-    if versions.size == 1
-      []
-    else
-      changes = [versions[0]._field_values.to_a - versions[1]._field_values.to_a] +
-        1.upto(versions.size - 1).map do |i|
-          versions[i]._field_values.to_a - versions[i - 1]._field_values.to_a
-        end
-      changes.map do |list|
-        list.each_with_object({}) do |fields, hash|
-          hash[fields[0]] = fields[1] unless fields[0] == 'item-hash'
-        end
-      end
-    end
-  end
-        ")
+        item.class.class_eval('include OpenRegister::VersionMethods')
       end
     end
 
