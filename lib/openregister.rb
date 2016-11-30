@@ -283,7 +283,7 @@ module OpenRegister
       end
       nil
     rescue RestClient::ResourceNotFound => e
-      puts e.to_s
+      puts "#{url} - #{e.to_s}"
     end
 
     def munge json
