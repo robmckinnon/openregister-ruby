@@ -26,9 +26,13 @@ class OpenRegister::Field
   include Morph
 end
 
+class OpenRegister::Entry
+  include Morph
+end
+
 module OpenRegister::Helpers
   def is_entry_resource_field? symbol
-    [:entry_number, :entry_timestamp, :item_hash].include? symbol
+    [:entry_number, :entry_timestamp, :item_hash, :key].include? symbol
   end
 
   def augmented_field? symbol
@@ -41,6 +45,49 @@ module OpenRegister::Helpers
 
   def field_name symbol
     symbol.to_s.gsub('_','-')
+  end
+end
+
+module OpenRegister::VersionMethods
+  def _versions
+    OpenRegister::versions(self.class.register, self, _base_url_or_phase)
+  end
+
+  def _version_changes
+    versions = _versions
+    if versions.size == 1
+      []
+    else
+      changes = [versions[0]._field_values.to_a - versions[1]._field_values.to_a] +
+        1.upto(versions.size - 1).map do |i|
+          versions[i]._field_values.to_a - versions[i - 1]._field_values.to_a
+        end
+      changes.map do |list|
+        list.each_with_object({}) do |fields, hash|
+          hash[fields[0]] = fields[1] unless fields[0] == 'item-hash'
+        end
+      end
+    end
+  end
+
+  def _version_change_display field, initial_date_field, change_date_field
+    field = field.to_s.gsub('_','-')
+    change_date_field = change_date_field.to_s.gsub('_','-')
+    changes_newest_first = _version_changes.select{|c| c.has_key?(field)}.reverse
+
+    lines = []
+    changes_newest_first.slice(1..-1).each_with_index do |change,i|
+      last_index = i == (changes_newest_first.size - 2)
+      value = change[field]
+      initial_date = if last_index
+                       send(initial_date_field)
+                     else
+                       change[change_date_field]
+                     end
+      until_date = changes_newest_first[i][change_date_field] || change[change_date_field]
+      lines << value + " " + initial_date.to_s + " - " + until_date.to_s
+    end
+    lines
   end
 end
 
@@ -71,6 +118,37 @@ module OpenRegister
     def record register, record, base_url_or_phase=nil
       url = url_for "record/#{record}", register, base_url_or_phase
       retrieve(url, register, base_url_or_phase, @cache).first
+    end
+
+    def item register, item_hash, base_url_or_phase=nil
+      url = url_for "item/#{item_hash}", register, base_url_or_phase
+      item = retrieve(url, register, base_url_or_phase, @cache).first
+      item.item_hash = item_hash if item
+      item
+    end
+
+    def entries register, record, base_url_or_phase=nil
+      url = url_for "record/#{record}/entries", register, base_url_or_phase
+      retrieve(url, :entry, base_url_or_phase, @cache)
+    end
+
+    def versions register, record, base_url_or_phase=nil
+      if record.respond_to?(:_curie)
+        object = record
+        record = record._curie.split(':').last
+      end
+
+      entries = entries register, record, base_url_or_phase
+      entries.map do |entry|
+        if object && object.respond_to?(:entry_number) && (object.entry_number == entry.entry_number)
+          object
+        else
+          item = item register, entry.item_hash, base_url_or_phase
+          item.entry_number = entry.entry_number if item
+          item.entry_timestamp = entry.entry_timestamp if item
+          item
+        end
+      end
     end
 
     def field record, base_url_or_phase=nil
@@ -136,6 +214,7 @@ module OpenRegister
     def additional_modification! item, base_url_or_phase, uri
       set_base_url_or_phase! item, base_url_or_phase
       set_uri! item, uri
+      define_versions! item
       convert_n_cardinality_data! item
     end
 
@@ -145,6 +224,14 @@ module OpenRegister
 
     def set_uri! item, uri
       item._uri = uri if uri[/\/record\//]
+    end
+
+    def define_versions! item
+      if !item.respond_to?(:_versions) &&
+          item.respond_to?(:entry_number) &&
+          item.class != OpenRegister::Entry
+        item.class.class_eval('include OpenRegister::VersionMethods')
+      end
     end
 
     def convert_n_cardinality_data! item
@@ -196,7 +283,7 @@ module OpenRegister
       end
       nil
     rescue RestClient::ResourceNotFound => e
-      puts e.to_s
+      puts "#{url} - #{e.to_s}"
     end
 
     def munge json
@@ -244,6 +331,7 @@ class OpenRegister::MorphListener
     klass.class_eval("def _register; self.class._register(_base_url_or_phase); end")
     klass.class_eval("def _register_fields; self._register._fields; end")
     klass.class_eval("def _curie; [self.class.register, send(self.class.register.underscore)].join(':'); end")
+    klass.class_eval("def _field_values; self.instance_variables.each_with_object({}){|x,h| h[x.to_s.sub('@','').gsub('_','-')] = self.instance_variable_get(x)}; end")
   end
 
   def register_or_field_class? klass, symbol
