@@ -253,3 +253,72 @@ industry: '56101'
 name: 'Licensed restaurants '
 _base_url_or_phase: :discovery
 ```
+
+### Retrieve record by primary key value
+
+You can retrieve a
+[record](https://openregister.github.io/specification/#record-resource) with a
+given primary key field value from a register using the `record` method:
+
+```rb
+prison = OpenRegister.record 'prison', 'MR', :alpha
+```
+
+### Retrieve entries for a primary key
+
+You can retrieve all
+[entries](https://openregister.github.io/specification/#entry-resource) with a
+given primary key field value from a register using the `entries` method:
+
+```rb
+entries = OpenRegister.entries 'prison', 'MH', :alpha
+
+puts entries.map {|x| [x.entry_number, x.item_hash, x.entry_timestamp].join("\t")}
+77	sha-256:6aa9bcb4a409e3026560ea338b365be55cf3f653a66ba2586fb206b83a7be722	2017-03-03T15:44:08Z
+78	sha-256:f2eb99fa4d3bda2a451f62153e85374cd5c8a44933498ec7077f214581fd179f	2017-03-03T15:44:08Z
+```
+
+### Retrieve versions for a primary key [experimental]
+
+You can retrieve all entries combined with associated
+[item](https://openregister.github.io/specification/#item-resource) fields using
+the `versions` method:
+
+```rb
+versions = OpenRegister.versions 'prison', 'MH', :alpha
+
+puts versions.map{|x| [x.entry_number, x.prison, x.name, x.change_date].join("\t")}
+77	MH	HMP Morton Hall
+78	MH	HMIRC Morton Hall	2011-05
+```
+
+This is an experimental feature, and is subject to change.
+
+### Show version changes [experimental] for a records
+
+You can retrieve a list of hashes representing fields that have changed across
+entries for a given primary key field value using `_version_changes` method:
+
+```rb
+prison = OpenRegister.record 'prison', 'MR', :alpha
+
+prison._version_changes
+=> [
+    {"entry-number"=>"77", "name"=>"HMP Morton Hall", "change-date"=>nil},
+    {"entry-number"=>"78", "name"=>"HMIRC Morton Hall", "change-date"=>"2011-05", "-uri"=>"http://prison.alpha.openregister.org/record/MH"}
+   ]
+```
+
+This is an experimental feature, and is subject to change.
+
+### Show version change description text [experimental]
+
+You can get text showing version changes description for a given field using
+`_version_change_display`:
+
+```rb
+prison._version_change_display(:name, :start_date, :change_date)
+=> ["HMP Morton Hall  - 2011-05"]
+```
+
+This is an experimental feature, and is subject to change.
