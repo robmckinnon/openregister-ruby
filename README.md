@@ -83,7 +83,7 @@ _uri: https://country.register.gov.uk/
 
 ### Retrieve a specific register's records
 
-To retrieve first page of records from a specific register:
+To retrieve first page of paginated records from a specific register:
 
 ```rb
 register = OpenRegister.registers[1]
@@ -105,6 +105,24 @@ country: VA
 name: Vatican City
 official_name: Vatican City State
 citizen_names: Vatican citizen
+```
+
+To retrieve all records from a specific register that has a few hundred records
+by paginating through all pages:
+
+```rb
+register._all_records
+```
+
+**Warning:** it is _not recommended_ to use `_all_records` on registers that
+contain millions of records. It would be _extremely_ slow, and you may run out of
+memory as all data returned is held in memory.
+
+You can set the page size when retrieving all records as follows, default value
+is 100, currently max page_size supported by the HTTP register API is 5,000:
+
+```rb
+register._all_records(page_size: 1000)
 ```
 
 ### Retrieve field definitions for a specific register
