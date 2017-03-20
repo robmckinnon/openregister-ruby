@@ -13,5 +13,5 @@ group :test do
   gem 'webmock'
 end
 
-gem 'morph', '>= 0.5.0'
-gem 'rest-client', '>= 2.0.0'
+gem 'morph', '>= 0.5.1'
+gem 'rest-client', '>= 2.0.1'
